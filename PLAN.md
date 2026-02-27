@@ -102,33 +102,62 @@ impl TemplarPalette {
 
 #### The Templar Mark (ASCII)
 
-The Templar logo (`LogoNew` in the web frontend at `components/icons/logo-new.tsx`) is a **stylized letter T that forms a shield/crest**. Key features from the actual logo: a **wide horizontal top bar with flared/upturned ends** (like serif horns), two **outer arms that angle inward**, a **narrow central vertical column**, and all three vertical elements **converge to a single downward point** at the bottom. The negative space between the outer arms and the central column creates the distinctive T letterform. It is rendered as ASCII art in three sizes:
+The Templar logo (`LogoNew` in the web frontend at `components/icons/logo-new.tsx`) is a **stylized letter T that forms a shield/crest**. Key structural features traced from the actual logo:
 
-**Full mark** (banner centerpiece, 10 lines):
+1. **Top bar** — a wide horizontal crossbar with **upturned/flared ends** that curve upward and outward (like horns or serif terminals)
+2. **Two thick outer arms** — emerge from the bar **narrow**, then **flare outward** (widen) over several rows before settling to a constant width
+3. **Thin center column** — runs straight down from the center of the bar
+4. **Parallel vertical section** — the three elements (left arm, center column, right arm) run parallel with clear gaps between them for the majority of the logo's height
+5. **Bottom convergence** — the outer arms angle inward, merge with the center column, and the merged form tapers to a **single downward point**
 
-```
-        ╗                         ╔
-        ╚═════════════════════════╝
-         ║   ║             ║   ║
-         ║   ║      ║      ║   ║
-          ║  ║      ║      ║  ║
-           ╲ ║      ║      ║ ╱
-            ╲║      ║      ║╱
-              ╲     ║     ╱
-                ╲   ║   ╱
-                  ╲ ║ ╱
-                    V
-```
+The negative space (the gaps between the arms and center column) creates the distinctive **T** letterform. It is rendered as ASCII art in three sizes:
 
-The top bar has upturned ends (`╗` / `╔`) matching the logo's flared serif terminals. The two outer arms angle progressively inward (`╲` / `╱`). The central column (`║`) runs straight down the middle. All three converge at the shield point (`V`) at the bottom. Rendered in **Gold** with **Antique Gold** for the outer arms.
-
-**Compact mark** (for headers, 7 lines):
+**Full mark** (banner centerpiece, 20 lines):
 
 ```
-       ╗               ╔
-       ╚═══════════════╝
-        ║  ║     ║  ║
-         ╲ ║     ║ ╱
+             ╱                         ╲
+            ╔═══════════════════════════╗
+            ║   ║               ║   ║
+         ═══╝    ║      ║      ║    ╚═══
+       ║         ║      ║      ║         ║
+       ║         ║      ║      ║         ║
+       ║         ║      ║      ║         ║
+       ║         ║      ║      ║         ║
+       ║         ║      ║      ║         ║
+       ║         ║      ║      ║         ║
+       ║         ║      ║      ║         ║
+       ║         ║      ║      ║         ║
+        ╲        ║      ║      ║        ╱
+          ╲      ║      ║      ║      ╱
+            ╲     ║     ║     ║     ╱
+              ╲    ║    ║    ║    ╱
+                ╲       ║       ╱
+                  ╲     ║     ╱
+                    ╲   ║   ╱
+                      ╲ ║ ╱
+                        V
+```
+
+- **Upturned ends** (`╱` / `╲` above the `╔═══╗`) capture the logo's distinctive flared/horned serif terminals.
+- **Arm flare** (`═══╝` / `╚═══`): The arms emerge narrow from the bar, then step outward to full width — matching the SVG's outward flare at the bar junction.
+- **Parallel section**: The long middle portion with three vertical elements (`║`) running in parallel, with clear whitespace gaps between them.
+- **Convergence**: The outer arms angle inward (`╲` / `╱`), merge with the center, and taper to the shield point (`V`).
+- Rendered in **Gold** with **Antique Gold** for the outer arms.
+
+**Compact mark** (for headers, 13 lines):
+
+```
+        ╱               ╲
+       ╔═════════════════╗
+       ║  ║       ║  ║
+    ═══╝   ║  ║  ║   ╚═══
+    ║      ║  ║  ║      ║
+    ║      ║  ║  ║      ║
+    ║      ║  ║  ║      ║
+    ║      ║  ║  ║      ║
+     ╲     ║  ║  ║     ╱
+       ╲    ║ ║ ║    ╱
+         ╲    ║    ╱
            ╲  ║  ╱
              ╲║╱
               V
@@ -144,35 +173,45 @@ The top bar has upturned ends (`╗` / `╔`) matching the logo's flared serif t
 On first invocation or `templar --version`, display the full Templar banner. The design integrates the actual Templar mark (temple facade from `LogoNew`) with flanking decorative pillars inspired by the `templar-bank-graphic.png` ruined temple illustration on the homepage. The "TEMPLAR" wordmark uses **wide letter-spacing** matching the `LogoNewFull` serif wordmark (PP Fragment Glare aesthetic — all caps, generous tracking):
 
 ```
-  ╓─╖                                                               ╓─╖
-  ║╿║  01101                                                10010   ║╿║
-  ╠═╣                                                               ╠═╣
-  ║│║              ╗                         ╔                      ║│║
-  ║│║              ╚═════════════════════════╝                      ║│║
-  ║│║               ║   ║             ║   ║                         ║│║
-  ║│║               ║   ║      ║      ║   ║                         ║│║
-  ║│║                ║  ║      ║      ║  ║                          ║│║
-  ║│║                 ╲ ║      ║      ║ ╱                           ║│║
-  ║│║                  ╲║      ║      ║╱                            ║│║
-  ║│║                    ╲     ║     ╱                              ║│║
-  ║│║                      ╲   ║   ╱                                ║│║
-  ║│║                        ╲ ║ ╱                                  ║│║
-  ║│║                          V                                    ║│║
-  ║│║                                                               ║│║
-  ║│║       T  E  M  P  L  A  R                                    ║│║
-  ║│║                                                               ║│║
-  ║│║       The First Cypher Lending Protocol                       ║│║
-  ║│║       Be Your Own Bank · v0.1.0                               ║│║
-  ║│║                                                               ║│║
-  ║│║       01001101 01100001 01101011 01100101                     ║│║
-  ║│║       01000010 01101001 01110100 01100011                     ║│║
-  ║│║       01101111 01101001 01101110 00100000                     ║│║
-  ║│║       01000011 01111001 01110000 01101000                     ║│║
-  ║│║       01100101 01110010 01110000 01110101                     ║│║
-  ║│║       01101110 01101011 00100000                              ║│║
-  ║│║       01000001 01100111 01100001 01101001 01101110            ║│║
-  ║│║                                                               ║│║
-  ╨┴╨━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╨┴╨
+  ╓─╖                                                                     ╓─╖
+  ║╿║  01101                                                      10010   ║╿║
+  ╠═╣                                                                     ╠═╣
+  ║│║                 ╱                         ╲                         ║│║
+  ║│║                ╔═══════════════════════════╗                        ║│║
+  ║│║                ║   ║               ║   ║                            ║│║
+  ║│║             ═══╝    ║      ║      ║    ╚═══                        ║│║
+  ║│║           ║         ║      ║      ║         ║                      ║│║
+  ║│║           ║         ║      ║      ║         ║                      ║│║
+  ║│║           ║         ║      ║      ║         ║                      ║│║
+  ║│║           ║         ║      ║      ║         ║                      ║│║
+  ║│║           ║         ║      ║      ║         ║                      ║│║
+  ║│║           ║         ║      ║      ║         ║                      ║│║
+  ║│║           ║         ║      ║      ║         ║                      ║│║
+  ║│║           ║         ║      ║      ║         ║                      ║│║
+  ║│║            ╲        ║      ║      ║        ╱                       ║│║
+  ║│║              ╲      ║      ║      ║      ╱                         ║│║
+  ║│║                ╲     ║     ║     ║     ╱                           ║│║
+  ║│║                  ╲    ║    ║    ║    ╱                             ║│║
+  ║│║                    ╲       ║       ╱                               ║│║
+  ║│║                      ╲     ║     ╱                                 ║│║
+  ║│║                        ╲   ║   ╱                                   ║│║
+  ║│║                          ╲ ║ ╱                                     ║│║
+  ║│║                            V                                       ║│║
+  ║│║                                                                     ║│║
+  ║│║           T  E  M  P  L  A  R                                      ║│║
+  ║│║                                                                     ║│║
+  ║│║           The First Cypher Lending Protocol                        ║│║
+  ║│║           Be Your Own Bank · v0.1.0                                ║│║
+  ║│║                                                                     ║│║
+  ║│║           01001101 01100001 01101011 01100101                      ║│║
+  ║│║           01000010 01101001 01110100 01100011                      ║│║
+  ║│║           01101111 01101001 01101110 00100000                      ║│║
+  ║│║           01000011 01111001 01110000 01101000                      ║│║
+  ║│║           01100101 01110010 01110000 01110101                      ║│║
+  ║│║           01101110 01101011 00100000                               ║│║
+  ║│║           01000001 01100111 01100001 01101001 01101110             ║│║
+  ║│║                                                                     ║│║
+  ╨┴╨━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╨┴╨
 ```
 
 **Design breakdown**:
@@ -187,10 +226,17 @@ On first invocation or `templar --version`, display the full Templar banner. The
 **Compact banner** (for narrow terminals < 70 cols):
 
 ```
-       ╗               ╔
-       ╚═══════════════╝
-        ║  ║     ║  ║
-         ╲ ║     ║ ╱
+        ╱               ╲
+       ╔═════════════════╗
+       ║  ║       ║  ║
+    ═══╝   ║  ║  ║   ╚═══
+    ║      ║  ║  ║      ║
+    ║      ║  ║  ║      ║
+    ║      ║  ║  ║      ║
+    ║      ║  ║  ║      ║
+     ╲     ║  ║  ║     ╱
+       ╲    ║ ║ ║    ╱
+         ╲    ║    ╱
            ╲  ║  ╱
              ╲║╱
               V
