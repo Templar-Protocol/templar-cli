@@ -3,10 +3,11 @@
 use serde::{Deserialize, Serialize};
 
 /// NEAR network identifier.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum NearNetwork {
     /// NEAR mainnet.
+    #[default]
     Mainnet,
     /// NEAR testnet.
     Testnet,
@@ -31,12 +32,6 @@ impl NearNetwork {
             Self::Testnet => "https://rpc.testnet.near.org",
             Self::Custom(_) => "",
         }
-    }
-}
-
-impl Default for NearNetwork {
-    fn default() -> Self {
-        Self::Mainnet
     }
 }
 

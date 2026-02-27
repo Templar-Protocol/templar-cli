@@ -148,7 +148,7 @@ impl Cli {
             return false;
         }
         // Show banner only for root command (no subcommand) or specific commands
-        matches!(self.command, None)
+        self.command.is_none()
     }
 
     /// Execute the CLI command.

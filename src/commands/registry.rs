@@ -58,7 +58,7 @@ impl RegistryCommand {
                             let acct = dep["contract_id"].as_str().unwrap_or("unknown");
                             let version = dep["version"].as_str().unwrap_or("?");
                             let kind = dep["kind"].as_str().unwrap_or("?");
-                            println!("    {} — v{} ({})", acct, version, kind);
+                            println!("    {acct} — v{version} ({kind})");
                         }
                     }
                 }

@@ -13,7 +13,7 @@
 ///
 /// The design is a stylised Templar cross composed of box-drawing and
 /// block elements, with a crown motif at the apex and a radiant base.
-pub const TEMPLAR_MARK: &str = r#"
+pub const TEMPLAR_MARK: &str = r"
                                          ╔═══╗
                                          ║ T ║
                                          ╚╤═╤╝
@@ -73,7 +73,7 @@ pub const TEMPLAR_MARK: &str = r#"
               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                 01001 10110 01101 11001 00101 10010 01011 11010 00110
               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-"#;
+";
 
 /// Compact one-line banner for narrow terminals (< 80 columns) or quiet mode.
 ///

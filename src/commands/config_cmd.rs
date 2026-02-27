@@ -15,7 +15,7 @@ pub enum ConfigCommand {
     Show,
     /// Set a configuration value.
     Set {
-        /// The config key to set (e.g., "near_rpc_url").
+        /// The config key to set (e.g., `near_rpc_url`).
         key: String,
         /// The value to set.
         value: String,
@@ -41,7 +41,8 @@ async fn run_init(_opts: &GlobalOpts) -> Result<(), CliError> {
 
     let config = Config::default();
     config.save()?;
-    println!("  \u{2720} Configuration forged at {:?}", Config::config_path()?);
+    let path = Config::config_path()?;
+    println!("  \u{2720} Configuration forged at {}", path.display());
     println!("    Your keys. Your protocol. Your bank.");
     Ok(())
 }

@@ -108,7 +108,7 @@ impl VaultCommand {
                 Ok(())
             }
             _ => {
-                println!("  Vault command: {:?}", self);
+                println!("  Vault command: {self:?}");
                 println!("  Write operations require signer setup.");
                 Ok(())
             }

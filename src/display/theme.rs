@@ -92,8 +92,8 @@ impl ColorMode {
     /// Resolve from the `--color` flag value. `None` means `auto`.
     pub fn from_flag(flag: Option<&str>) -> Self {
         match flag.map(|s| s.to_ascii_lowercase()).as_deref() {
-            Some("always") | Some("yes") | Some("true") => Self::Always,
-            Some("never") | Some("no") | Some("false") => Self::Never,
+            Some("always" | "yes" | "true") => Self::Always,
+            Some("never" | "no" | "false") => Self::Never,
             _ => Self::Auto,
         }
     }

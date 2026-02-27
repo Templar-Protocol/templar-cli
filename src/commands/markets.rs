@@ -66,7 +66,7 @@ impl MarketsCommand {
                     for dep in &deployments {
                         let acct = dep["contract_id"].as_str().unwrap_or("unknown");
                         let version = dep["version"].as_str().unwrap_or("?");
-                        println!("  {} (v{})", acct, version);
+                        println!("  {acct} (v{version})");
                     }
                 }
                 Ok(())
