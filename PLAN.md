@@ -4,6 +4,10 @@
 
 Build `templar-cli`, a Rust CLI tool for interacting with Templar Protocol contracts and services across multiple blockchains. The CLI will support NEAR, Solana, Stellar, and EVM chains through Templar's Universal Account abstraction, and provide both direct on-chain reads and relayer-mediated write operations.
 
+**Cross-chain asset support**: BTC, XRP, ADA, LTC, ZEC, DOGE, SOL, XLM, ETH, and ERC-20 tokens are bridged via two complementary systems:
+- **Hot Bridge** (`v2_1.omni.hot.tg`) — NEP-245 multi-token bridge for assets like XLM, ZEC, and Stellar-based tokens. Uses `bridge-refuel.hot.tg` for gasless withdrawals. Assets are represented as NEP-245 multi-tokens on NEAR.
+- **Intents Bridge** (Defuse/1click — `bridge.chaindefuser.com`) — NEP-141 OMFT bridge for BTC, DOGE, LTC, ADA, XRP, ETH, SOL, and ERC-20 tokens. Assets are represented as `*.omft.near` tokens (NEP-141) on NEAR.
+
 Development follows **test-driven development (TDD)** throughout — tests are written before implementation for every module, targeting **95%+ code coverage**. Both **human-readable guide documentation** (mdbook) and **comprehensive Rust API docs** (rustdoc) are produced alongside the code.
 
 ## Architecture Decision
@@ -58,6 +62,7 @@ templar-cli/
 │       │   ├── registry.md            # templar registry
 │       │   ├── prices.md              # templar prices
 │       │   ├── ua.md                  # templar ua
+│       │   ├── bridge.md             # templar bridge (deposit/withdraw)
 │       │   └── tx.md                  # templar tx
 │       ├── multichain/
 │       │   ├── index.md               # Multichain overview
@@ -65,6 +70,11 @@ templar-cli/
 │       │   ├── solana.md              # Solana via Universal Account
 │       │   ├── evm.md                 # EVM via Universal Account
 │       │   └── stellar.md             # Stellar via Universal Account
+│       ├── bridging/
+│       │   ├── index.md               # Cross-chain bridging overview
+│       │   ├── hot-bridge.md          # Hot Bridge (NEP-245) assets
+│       │   ├── intents-bridge.md      # Intents/Defuse (NEP-141 OMFT) assets
+│       │   └── supported-assets.md    # Full asset table with decimals, contract IDs
 │       ├── architecture.md            # Internal architecture for contributors
 │       └── glossary.md                # Term definitions (aligned with contracts glossary)
 ├── src/
@@ -84,7 +94,8 @@ templar-cli/
 │   │   ├── borrow.rs                  # BorrowPosition, BorrowStatus, collateral types
 │   │   ├── supply.rs                  # SupplyPosition, WithdrawalRequestStatus
 │   │   ├── number.rs                  # Decimal, amount types (BorrowAssetAmount, etc.)
-│   │   └── universal_account.rs       # KeyId, KeyParameters, PayloadExecutionParameters
+│   │   ├── universal_account.rs       # KeyId, KeyParameters, PayloadExecutionParameters
+│   │   └── bridge.rs                  # Bridge types: ChainId, TokenInfo, IntentsChain, etc.
 │   ├── near/
 │   │   ├── mod.rs                     # NEAR interaction layer overview
 │   │   ├── rpc.rs                     # RPC client: view_function, view_account, tx_status
@@ -96,7 +107,17 @@ templar-cli/
 │   │       ├── vault.rs               # All VaultExternalInterface view/call wrappers
 │   │       ├── registry.rs            # Registry contract view/call wrappers
 │   │       ├── token.rs               # NEP-141 ft_transfer_call, ft_balance_of
+│   │       ├── multi_token.rs         # NEP-245 mt_transfer_call, mt_balance_of
 │   │       └── universal_account.rs   # UA contract: get_key, list_keys, execute
+│   ├── bridge/
+│   │   ├── mod.rs                     # Bridge layer overview, BridgeProvider trait
+│   │   ├── chains.rs                  # Supported chains enum + chain metadata
+│   │   ├── assets.rs                  # Asset registry: token → bridge route mapping
+│   │   ├── hot.rs                     # Hot Bridge client (NEP-245 multi-token deposits/withdrawals)
+│   │   ├── intents.rs                 # Intents/Defuse bridge client (OMFT NEP-141 deposits/withdrawals)
+│   │   ├── deposit.rs                 # Unified deposit flow: get address → notify → track
+│   │   ├── withdraw.rs               # Unified withdrawal flow: create intent → sign → submit
+│   │   └── solver.rs                  # Solver relayer client (publish_intents, get_status)
 │   ├── client/
 │   │   ├── mod.rs                     # Client layer overview
 │   │   ├── backend.rs                 # Backend gateway REST API client
@@ -120,12 +141,19 @@ templar-cli/
 │   │   ├── universal_account.rs       # `ua` — create, whoami, list-keys, add-key, remove-key
 │   │   ├── prices.rs                  # `prices` — query oracle prices
 │   │   ├── registry.rs               # `registry` — list, show
+│   │   ├── bridge_cmd.rs             # `bridge` — deposit, withdraw, track, supported-assets
 │   │   └── tx.rs                      # `tx` — status, history
 │   ├── signing/
 │   │   ├── mod.rs                     # Signing dispatch (per auth method)
 │   │   ├── envelope.rs               # NEAR transaction envelope construction
 │   │   ├── pow.rs                     # Proof-of-work for UA account creation
-│   │   └── relay.rs                   # Sign-and-relay flow (V0 + V1)
+│   │   ├── relay.rs                   # Sign-and-relay flow (V0 + V1)
+│   │   └── intents_signer.rs         # Intent signing for cross-chain withdrawals (NEP-413, raw_ed25519, sep53, erc191, webauthn)
+│   ├── analytics/
+│   │   ├── mod.rs                     # Analytics dispatch + opt-in/out management
+│   │   ├── cli_usage.rs              # CLI usage telemetry (commands, errors, timing)
+│   │   ├── contract_analytics.rs     # On-chain analytics (TVL, utilization, positions)
+│   │   └── reporter.rs               # Background telemetry reporter
 │   └── display/
 │       ├── mod.rs                     # Output formatting dispatch (json vs table)
 │       ├── table.rs                   # Table rendering for terminal
@@ -139,10 +167,16 @@ templar-cli/
 │   ├── contract_vault_test.rs        # Vault contract view/call wrappers
 │   ├── contract_registry_test.rs     # Registry contract wrappers
 │   ├── contract_token_test.rs        # NEP-141 token wrappers
+│   ├── contract_multi_token_test.rs  # NEP-245 multi-token wrappers
+│   ├── bridge_hot_test.rs            # Hot Bridge client (wiremock)
+│   ├── bridge_intents_test.rs        # Intents/Defuse bridge client (wiremock)
+│   ├── bridge_deposit_test.rs        # Unified deposit flow tests
+│   ├── bridge_withdraw_test.rs       # Unified withdrawal + intent signing tests
 │   ├── backend_client_test.rs        # Backend API client (wiremock)
 │   ├── relayer_client_test.rs        # Relayer API client (wiremock)
 │   ├── auth_test.rs                   # Key import, signing, auth dispatch
 │   ├── signing_test.rs               # Transaction signing, envelope construction
+│   ├── analytics_test.rs             # Analytics collection and reporting
 │   ├── display_test.rs               # Output formatting (table + JSON)
 │   ├── types_serde_test.rs           # Serialization round-trips for vendored types
 │   └── cli_integration_test.rs       # End-to-end CLI invocations via assert_cmd
@@ -167,6 +201,7 @@ Every module follows **Red-Green-Refactor**:
 | **Unit tests** | `#[cfg(test)] mod tests` in each source file | `cargo nextest` | Test individual functions, parsing, formatting |
 | **Integration tests** | `tests/*.rs` | `cargo nextest` | Test module interactions, mocked network calls |
 | **Contract mock tests** | `tests/contract_*.rs` | `cargo nextest` + `wiremock` | Test NEAR RPC view/call wrappers against recorded responses |
+| **Bridge mock tests** | `tests/bridge_*.rs` | `cargo nextest` + `wiremock` | Test bridge API clients against recorded JSON-RPC responses |
 | **CLI E2E tests** | `tests/cli_integration_test.rs` | `assert_cmd` + `predicates` | Test actual CLI binary invocations |
 | **Testnet integration** | `#[ignore]` tests in `tests/` | Manual / CI opt-in | Real network calls against NEAR testnet |
 
@@ -179,10 +214,10 @@ Every module follows **Red-Green-Refactor**:
 
 ### Mocking Strategy
 
-- **Trait-based injection**: All external I/O goes through traits (`NearRpcClient`, `BackendClient`, `RelayerClient`, `PythClient`)
+- **Trait-based injection**: All external I/O goes through traits (`NearRpcClient`, `BackendClient`, `RelayerClient`, `PythClient`, `BridgeClient`, `SolverClient`)
 - **`mockall`**: Auto-generate mock implementations for unit/integration tests
-- **`wiremock`**: Mock HTTP servers for backend API and relayer client tests
-- **Test fixtures**: JSON files in `tests/fixtures/` with real contract responses captured from testnet
+- **`wiremock`**: Mock HTTP servers for backend API, relayer, bridge JSON-RPC, and solver relayer tests
+- **Test fixtures**: JSON files in `tests/fixtures/` with real contract/bridge responses captured from testnet/mainnet
 
 ### Test Infrastructure (Set up in Phase 1)
 
@@ -257,46 +292,6 @@ Located in `docs/`, built via `mdbook build docs/`, deployed alongside rustdoc.
 - Shell examples showing both interactive and non-interactive (scripting) usage
 - Glossary aligned with `contracts/docs/src/glossary.md`
 
-**Example command page** (matching supply.md pattern from contracts/docs):
-```markdown
-# Supply
-
-Manage supply positions in Templar markets.
-
-## Deposit
-
-Supply assets to a market to earn yield.
-
-### Using NEAR Direct Signing
-
-    templar supply deposit <market-id> <amount> \
-        --signer <account-id>
-
-### Using Universal Account (any chain)
-
-    templar supply deposit <market-id> <amount>
-
-The CLI will use your active key to sign via the Universal Account relayer.
-
-## Withdraw
-
-Since borrowers use supplied assets, withdrawals go through a queue.
-
-### Create Withdrawal Request
-
-    templar supply withdraw <market-id> <amount>
-
-### Check Withdrawal Status
-
-    templar supply withdraw-status <market-id>
-
-### Execute Next Withdrawal
-
-    templar supply execute-withdrawal <market-id>
-
-This is not permissioned — anyone can advance the queue.
-```
-
 ### 3. Documentation Build Commands
 
 ```bash
@@ -327,16 +322,35 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 - **Tests**: verify project compiles, `--help` produces output, `--version` works
 
 ### 1.2 Error Types (`src/error.rs`)
-- Define `CliError` enum: `Config`, `Rpc`, `Http`, `Signing`, `InvalidInput`, `Io`, `Serialization`, `Interrupted`, `Other`
+- Define `CliError` enum: `Config`, `Rpc`, `Http`, `Bridge`, `Signing`, `InvalidInput`, `Io`, `Serialization`, `Interrupted`, `Other`
 - `impl Display` with user-friendly messages
 - `impl From<T>` for common error types
 - **Tests**: error display formatting, error conversions, all variants round-trip through Display
 
 ### 1.3 Configuration System (`src/config/`)
 - Config file at `~/.templar/config.toml` (or `$TEMPLAR_CONFIG`)
-- `Profile` struct with all network settings (RPC URLs, contract IDs, chain IDs)
-- Built-in `mainnet` and `testnet` profiles with sensible defaults
-- Load/save/merge logic (file → env → CLI flags)
+- `Profile` struct with all network settings (RPC URLs, contract IDs, chain IDs, bridge endpoints)
+- Built-in `mainnet` and `testnet` profiles with sensible defaults:
+  ```toml
+  [profiles.mainnet]
+  near_rpc_url = "https://rpc.mainnet.fastnear.com"
+  backend_url = "https://api.templarfi.org"
+  relayer_v0_url = "https://relayer.templarfi.org"
+  relayer_v1_url = "https://relayer.templarfi.org:4001"
+  near_network_id = "mainnet"
+  near_chain_id = 397
+  registry_contract_ids = ["v1.tmplr.near"]
+  hermes_url = "https://hermes.pyth.network"
+  bridge_rpc_url = "https://bridge.chaindefuser.com/rpc"
+  solver_relayer_url = "https://solver-relay.chaindefuser.com/rpc"
+  hot_bridge_contract = "v2_1.omni.hot.tg"
+  intents_contract = "intents.near"
+  analytics_enabled = true
+  analytics_endpoint = "https://analytics.templarfi.org/cli"
+  ```
+- CLI-level `--profile` and `--network` flags override defaults
+- `templar config init` — interactive setup
+- `templar config show` — display active configuration
 - **Tests** (written first):
   - Default config creates valid mainnet profile
   - Config file round-trips through serialize/deserialize
@@ -367,10 +381,17 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
   - `OracleResponse`, price types
   - `Decimal`, amount newtypes
   - `KeyId`, `KeyParameters`
+- Bridge types (from `funding-bridge`):
+  - `ChainId` (e.g., `"eth:1"`, `"btc:mainnet"`, `"stellar:mainnet"`)
+  - `IntentsChain` enum: `Near`, `Eth`, `Btc`, `Sol`, `Xlm`, `Zec`, `Doge`, `Ada`, `Ltc`, `Xrp`
+  - `TokenInfo`, `DepositAddressResult`, `DepositInfo`, `DepositStatus`
+  - `Intent` enum: `FtWithdraw`, `MtWithdraw`, `Transfer`, `TokenDiff`
+  - `SignedPayload`, `PayloadWrapper` (NEP-413)
 - **Tests** (written first):
   - Deserialize real JSON responses captured from testnet (stored in `tests/fixtures/`)
   - Serialize/deserialize round-trip for every type
   - Edge cases: zero amounts, max values, empty optional fields
+  - Bridge type parsing: ChainId parsing, IntentsChain → chain string mapping
 
 ### 1.6 Commands Skeleton (`src/commands/`)
 - Top-level `Commands` enum with all subcommands registered
@@ -484,25 +505,13 @@ Wraps every method from `MarketExternalInterface`:
 Wraps every method from `VaultExternalInterface`:
 
 **View calls:**
-- `get_configuration(vault_id)` → `VaultConfiguration`
-- `get_total_assets(vault_id)` → `U128`
-- `get_last_total_assets(vault_id)` → `U128`
-- `get_total_supply(vault_id)` → `U128`
-- `get_max_deposit(vault_id)` → `U128`
-- `convert_to_shares(vault_id, assets)` → `U128`
-- `convert_to_assets(vault_id, shares)` → `U128`
-- `preview_deposit(vault_id, assets)` → `U128`
-- `preview_mint(vault_id, shares)` → `U128`
-- `preview_withdraw(vault_id, assets)` → `U128`
-- `preview_redeem(vault_id, shares)` → `U128`
-- `get_cap_groups(vault_id)` → `Vec<(CapGroupId, CapGroupRecord)>`
-- `get_fees(vault_id)` → `Fees`
-- `get_restrictions(vault_id)` → `Option<Restrictions>`
+- `get_configuration`, `get_total_assets`, `get_last_total_assets`, `get_total_supply`
+- `get_max_deposit`, `convert_to_shares`, `convert_to_assets`
+- `preview_deposit`, `preview_mint`, `preview_withdraw`, `preview_redeem`
+- `get_cap_groups`, `get_fees`, `get_restrictions`
 
 **Function calls:**
-- `withdraw(vault_id, amount, receiver)` — withdraw assets
-- `redeem(vault_id, shares, receiver)` — redeem shares
-- `deposit(token_id, vault_id, amount)` → `ft_transfer_call` with deposit msg
+- `withdraw`, `redeem`, `deposit` (via ft_transfer_call)
 - Governance: `set_curator`, `submit_cap`, `accept_cap`, `reallocate`, `set_supply_queue`, etc.
 
 **Tests**: Same pattern as market — mock RPC, verify deserialization, verify tx construction
@@ -516,14 +525,20 @@ Wraps every method from `VaultExternalInterface`:
 
 **Tests**: Mock RPC responses, verify deserialization
 
-### 2.7 NEP-141 Token Client (`src/near/contract/token.rs`)
+### 2.7 Token Clients (`src/near/contract/token.rs`, `multi_token.rs`)
 
+**NEP-141 (Fungible Token):**
 - `ft_balance_of(token_id, account_id)` → `U128`
 - `ft_metadata(token_id)` → `FungibleTokenMetadata`
 - `ft_transfer_call(token_id, receiver_id, amount, msg)` → `Promise`
 - `storage_deposit(token_id, account_id)` — ensure storage registered
 
-**Tests**: Standard NEP-141 responses, storage deposit flow
+**NEP-245 (Multi-Token — for Hot Bridge assets):**
+- `mt_balance_of(contract_id, account_id, token_id)` → `U128`
+- `mt_metadata(contract_id, token_ids)` → metadata
+- `mt_transfer_call(contract_id, receiver_id, token_id, amount, msg)` → `Promise`
+
+**Tests**: Standard NEP-141/245 responses, storage deposit flow
 
 ### 2.8 CLI Commands (Phase 2)
 
@@ -546,7 +561,8 @@ templar account health <market-id> <account-id>         # Borrow health / MCR st
 templar account pending-interest <market-id> <account-id> # Pending interest
 templar account pending-yield <market-id> <account-id>  # Pending yield
 templar account withdrawal-status <market-id> <account-id> # Withdrawal queue position
-templar account balance <token-id> <account-id>         # Token balance
+templar account balance <token-id> <account-id>         # NEP-141 token balance
+templar account mt-balance <contract-id> <token-id> <account-id> # NEP-245 multi-token balance
 
 # Supply write operations (NEAR direct signing)
 templar supply deposit <market-id> <amount> --signer <id>
@@ -624,15 +640,19 @@ templar tx status <tx-hash> --signer <account-id>
 
 ### 3.2 Auth Method Dispatch (`src/auth/mod.rs`)
 - `AuthMethod` enum: `Near`, `Solana`, `Evm`, `Stellar`
-- Map key type → signing method → relayer version
+- Map key type → signing method → relayer version:
+  - NEAR key → standard NEAR transaction signing OR NEP-413 for intents
+  - Solana key → `raw_ed25519` standard for solver relayer, `Ed25519Raw` for UA relayer V0
+  - EVM key → `erc191` standard for solver relayer, `Eip191` for UA relayer V1
+  - Stellar key → `sep53` standard for solver relayer, `Sep53` for UA relayer V1
 - Auto-detect from active key type, or explicit `--auth-method` flag
-- **Tests**: dispatch logic for each key type
+- **Tests**: dispatch logic for each key type, correct standard selected
 
 ### 3.3 Chain-Specific Signing (`src/auth/{near_wallet,solana,evm,stellar}.rs`)
-- NEAR: Standard ed25519 signing (direct transaction)
-- Solana: Ed25519Raw signature → V0 relayer payload
-- EVM: EIP-191 personal_sign → V1 relayer payload
-- Stellar: Sep53 ed25519 signature → V1 relayer payload
+- NEAR: Standard ed25519 signing (direct transaction) + NEP-413 off-chain signing
+- Solana: Ed25519Raw signature → raw payload signing
+- EVM: EIP-191 personal_sign → with v-byte normalization (v >= 27 → v - 27)
+- Stellar: Sep53 ed25519 signature → with address encoding (G... → XDR ScVal → base58)
 - **Tests**: Sign and verify with test keys for each chain
 
 ### 3.4 Universal Account Lookup
@@ -656,9 +676,9 @@ templar ua whoami
 
 ---
 
-## Phase 4: Transaction Signing & Relay (Universal Account Write Operations)
+## Phase 4: Transaction Signing & Relay + Cross-Chain Bridging
 
-**Goal**: Sign and relay transactions through the Universal Account relayer, enabling all write operations from any supported chain.
+**Goal**: Sign and relay transactions through the Universal Account relayer AND enable cross-chain deposits/withdrawals via Hot Bridge + Intents Bridge.
 
 ### 4.1 Relayer Client (`src/client/relayer.rs`)
 - V0 relay: `POST /relay` (Solana, Passkey)
@@ -684,7 +704,124 @@ templar ua whoami
 - Display transaction hash and result
 - **Tests**: full flow against mocked relayer + RPC
 
-### 4.5 CLI Commands (Phase 4)
+### 4.5 Intent Signing (`src/signing/intents_signer.rs`)
+
+Sign intents for cross-chain withdrawals, supporting all auth methods:
+
+| Auth Method | Standard | Payload Format | Signature Format |
+|------------|----------|---------------|-----------------|
+| NEAR wallet | `nep413` | Borsh-serialized `(OFFCHAIN_PREFIX_TAG, PayloadWrapper)` → SHA-256 → sign | `ed25519:<base58>` |
+| Solana | `raw_ed25519` | Raw JSON string → sign bytes directly | `ed25519:<base58>` |
+| Stellar | `sep53` | Pretty-printed JSON payload → sign | `ed25519:<base58>` |
+| EVM | `erc191` | Pretty-printed JSON payload → personal_sign | `secp256k1:<base58>` (v normalized) |
+
+- **Tests**: verify signed payload matches expected format for each auth method, round-trip deserialization
+
+### 4.6 Cross-Chain Bridge Module (`src/bridge/`)
+
+#### 4.6.1 Supported Chains & Assets (`src/bridge/chains.rs`, `assets.rs`)
+
+Complete asset registry mapping each asset to its bridge route:
+
+| Asset | Chain ID | Bridge | NEAR Token | Decimals | Type |
+|-------|----------|--------|------------|----------|------|
+| BTC | `btc:mainnet` | Intents | `btc.omft.near` | 8 | NEP-141 OMFT |
+| XRP | `xrp:mainnet` | Intents | `xrp.omft.near` | 6 | NEP-141 OMFT |
+| ADA | `cardano:mainnet` | Intents | `cardano.omft.near` | 6 | NEP-141 OMFT |
+| LTC | `ltc:mainnet` | Intents | `ltc.omft.near` | 8 | NEP-141 OMFT |
+| ZEC | `zec:mainnet` | Intents | `zec.omft.near` | 8 | NEP-141 OMFT |
+| DOGE | `doge:mainnet` | Intents | `doge.omft.near` | 8 | NEP-141 OMFT |
+| ETH | `eth:1` | Intents | `eth.omft.near` | 18 | NEP-141 OMFT |
+| SOL | `sol:mainnet` | Intents | Various OMFT | varies | NEP-141 OMFT |
+| XLM | `stellar:mainnet` | Hot Bridge | `v2_1.omni.hot.tg` | 7 | NEP-245 MT |
+| USDC (Stellar) | `stellar:mainnet` | Hot Bridge | `v2_1.omni.hot.tg` | 7 | NEP-245 MT |
+| USDC (ETH) | `eth:1` | Intents | `eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near` | 6 | NEP-141 OMFT |
+| USDT (ETH) | `eth:1` | Intents | `eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near` | 6 | NEP-141 OMFT |
+| WBTC (ETH) | `eth:1` | Intents | `eth-0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.omft.near` | 8 | NEP-141 OMFT |
+
+- `AssetRegistry` struct with lookup by symbol, chain, and NEAR token ID
+- `BridgeRoute` enum: `IntentsBridge` (NEP-141 OMFT) | `HotBridge` (NEP-245 MT)
+- **Tests**: all asset lookups resolve correctly, NEAR token IDs match real contracts
+
+#### 4.6.2 Intents Bridge Client (`src/bridge/intents.rs`)
+
+Wraps the Defuse/1click bridge API at `bridge.chaindefuser.com/rpc`:
+
+- `deposit_address(account_id, chain)` → `DepositAddressResult` (address + optional memo)
+  - Stellar uses `deposit_mode: "MEMO"` for shared address + memo deposits
+- `recent_deposits(account_id, chain, limit)` → `Vec<DepositInfo>`
+- `notify_deposit(tx_hash, chain)` → acknowledgment
+- `supported_tokens(chains)` → `Vec<TokenInfo>`
+- `withdrawal_estimate(chain, token, address)` → fee + min amounts
+- `withdrawal_status(withdrawal_hash)` → status tracking
+
+**Withdrawal intent construction** (for NEP-141 OMFT assets):
+```rust
+Intent::FtWithdraw {
+    token: "btc.omft.near",           // NEAR OMFT contract
+    receiver_id: "btc.omft.near",     // Same as token for withdrawals
+    amount: "100000000",              // In smallest units (satoshis)
+    memo: "WITHDRAW_TO:<btc-address>" // Destination address
+}
+```
+
+**Tests**: wiremock for all JSON-RPC endpoints, fixture-based response verification
+
+#### 4.6.3 Hot Bridge Client (`src/bridge/hot.rs`)
+
+Wraps the Hot Bridge for NEP-245 multi-token assets (XLM, Stellar-based tokens):
+
+- Deposit: Same `deposit_address` API (bridge.chaindefuser.com) — assets arrive as NEP-245 tokens on `v2_1.omni.hot.tg`
+- Withdrawal: Uses `mt_withdraw` intent via `bridge-refuel.hot.tg` for gasless bridging
+
+**Withdrawal intent construction** (for NEP-245 MT assets):
+```rust
+Intent::MtWithdraw {
+    token: "v2_1.omni.hot.tg",                   // Hot Bridge MT contract
+    receiver_id: "bridge-refuel.hot.tg",          // Gasless bridge refuel
+    token_ids: vec!["1100_111bzQBB5v7Ah..."],     // Stellar-specific token ID
+    amounts: vec!["10000000"],                     // 1 XLM (7 decimals)
+    memo: None,
+    msg: Some(json!({                             // Gasless withdrawal payload
+        "receiver_id": "<base58-encoded-stellar-address>",
+        "amount_native": "0",
+        "block_number": 0
+    }).to_string()),
+}
+```
+
+- Stellar address encoding: G... → XDR ScVal → base58 (matching `encode_receiver` from funding-bridge)
+- **Tests**: verify mt_withdraw intent construction, stellar address encoding, token ID resolution
+
+#### 4.6.4 Solver Relayer Client (`src/bridge/solver.rs`)
+
+Submits signed intents to the solver relayer:
+
+- `publish_intents(signed_data)` → intent hash
+- `get_status(intent_hash)` → `PENDING | COMPLETED | FAILED`
+
+The `signed_data` varies by auth method (see Intent Signing table in 4.5).
+
+- **Tests**: wiremock for publish/status endpoints, auth method payloads
+
+#### 4.6.5 Unified Deposit/Withdraw Flows (`src/bridge/deposit.rs`, `withdraw.rs`)
+
+**Deposit flow**:
+1. Determine bridge route from asset symbol → `IntentsBridge` or `HotBridge`
+2. Call `deposit_address(account_id, chain)` to get deposit address (+ memo for Stellar)
+3. Display QR code (via `qr2term`) + address + memo
+4. Poll `recent_deposits` until deposit is confirmed
+5. Display confirmation + NEAR tx hash
+
+**Withdraw flow**:
+1. Determine bridge route from asset symbol
+2. Construct appropriate intent (`FtWithdraw` for Intents, `MtWithdraw` for Hot)
+3. Sign using active auth method (NEP-413, raw_ed25519, sep53, or erc191)
+4. Submit to solver relayer
+5. Poll `get_status` until resolved
+6. Display result
+
+### 4.7 CLI Commands (Phase 4)
 
 All Phase 2 write commands now work WITHOUT `--signer` using Universal Account:
 ```
@@ -699,26 +836,150 @@ templar ua create [--key-type <type>]
 templar ua add-key <key-type> <pubkey>
 templar ua remove-key <key-type> <pubkey>
 templar ua list-keys <account-id>
+
+# Cross-chain bridge operations
+templar bridge supported-assets                          # List all supported bridgeable assets
+templar bridge deposit-address <asset> [--chain <chain>] # Get deposit address (+ memo for XLM)
+templar bridge deposit <asset> [--chain <chain>]         # Interactive deposit flow with QR + polling
+templar bridge withdraw <asset> <amount> <destination-address> [--chain <chain>]  # Cross-chain withdrawal
+templar bridge track <intent-hash>                       # Track withdrawal/deposit status
+templar bridge recent-deposits [--chain <chain>]         # List recent deposits
+templar bridge estimate-fee <asset> <destination-address> [--chain <chain>]  # Withdrawal fee estimate
 ```
 
-### 4.6 Transaction Confirmation
+### 4.8 Transaction Confirmation
 - Show transaction summary before signing (method, contract, amounts, gas, auth method)
+- For bridge operations: show bridge route, fees, estimated time
 - `--yes` / `-y` flag to skip confirmation
 - Display tx hash on success
 - `templar tx status <tx-hash>` — query result
 
-### 4.7 Documentation (Phase 4)
+### 4.9 Documentation (Phase 4)
+- mdbook `commands/bridge.md` — full bridge command reference
+- mdbook `bridging/` section:
+  - `index.md` — bridging overview, how assets flow cross-chain
+  - `hot-bridge.md` — Hot Bridge mechanics, NEP-245 token format, gasless withdrawals
+  - `intents-bridge.md` — Intents/Defuse mechanics, OMFT format, solver relayer
+  - `supported-assets.md` — comprehensive table of all supported assets with decimals, contract IDs, and deposit/withdrawal instructions
 - mdbook `commands/ua.md` and `commands/tx.md`
 - Update all write command pages with UA usage examples
-- Rustdoc for all `signing/` modules
+- Rustdoc for all `signing/` and `bridge/` modules
 
 ---
 
-## Phase 5: Advanced Features
+## Phase 5: Advanced Features, Analytics & Governance
 
-**Goal**: Power-user features, governance, cross-chain deposit tracking, and operational tooling.
+**Goal**: Power-user features, governance operations, CLI usage analytics, on-chain contract analytics, and operational tooling.
 
-### 5.1 Vault Governance Commands
+### 5.1 CLI Usage Analytics (`src/analytics/cli_usage.rs`)
+
+Opt-in telemetry for understanding how the CLI is used.
+
+**What is tracked**:
+- **Downloads/installations**: Version, platform, install method (cargo, binary, brew)
+- **Command usage**: Which commands are run, how often, with which flags (no sensitive values)
+- **Error rates**: Which commands fail, error categories (not error details)
+- **Timing**: Command execution duration (bucketed: <1s, 1-5s, 5-30s, 30s+)
+- **Session info**: Session duration, number of commands per session
+- **Environment**: OS, architecture, terminal type, shell
+
+**What is NOT tracked**:
+- No account IDs, private keys, wallet addresses, or transaction data
+- No contract IDs, amounts, or any user-specific financial information
+- No IP addresses (if self-hosted, no network data at all)
+
+**Implementation**:
+```rust
+/// Analytics event sent to the telemetry endpoint
+pub struct CliEvent {
+    pub event_type: EventType,   // "command_run", "command_error", "session_start", "session_end"
+    pub command: String,         // e.g., "markets.list", "supply.deposit"
+    pub flags: Vec<String>,      // sanitized flag names only (e.g., "--output", "--yes")
+    pub duration_ms: u64,        // execution time
+    pub success: bool,           // did it succeed?
+    pub error_category: Option<String>, // e.g., "rpc_timeout", "invalid_input"
+    pub cli_version: String,
+    pub os: String,
+    pub arch: String,
+}
+```
+
+**Opt-in/out mechanism**:
+- First run: prompt user "Help improve Templar CLI by sharing anonymous usage data? [y/N]"
+- `templar config set analytics.enabled true|false`
+- `TEMPLAR_ANALYTICS=0` env var to disable
+- Config file: `analytics_enabled = true|false`
+- Default: **disabled** (must explicitly opt in)
+
+**Reporter** (`src/analytics/reporter.rs`):
+- Background async task batches events, sends every 60s or on CLI exit
+- Fire-and-forget: analytics failures never affect CLI functionality
+- Endpoint configurable in profile: `analytics_endpoint`
+- Local fallback: events written to `~/.templar/analytics.jsonl` if endpoint unreachable
+
+**Tests**:
+- Event construction produces valid JSON
+- Opt-out prevents any data collection
+- Reporter handles endpoint failures gracefully
+- Sensitive data scrubbing (no account IDs leak through)
+- Batch sending and flush-on-exit logic
+
+### 5.2 Contract-Level Analytics (`src/analytics/contract_analytics.rs`)
+
+On-chain analytics queries aggregating data across Templar contracts.
+
+**Market Analytics**:
+```
+templar analytics markets                               # Overview of all markets
+templar analytics market <market-id>                    # Detailed market analytics
+```
+
+Per-market metrics (computed from on-chain data):
+- **TVL**: Total supply + total collateral (in USD via oracle prices)
+- **Utilization rate**: borrowed / total_supply
+- **APY**: Current supply yield rate, borrow interest rate
+- **Borrow asset metrics**: total deposited, available, utilized
+- **Position counts**: number of suppliers, number of borrowers
+- **Withdrawal queue**: queue depth, pending amount
+- **Historical**: snapshot-over-snapshot trends (from `list_finalized_snapshots`)
+
+**Vault Analytics**:
+```
+templar analytics vault <vault-id>                      # Vault performance analytics
+templar analytics vaults                                # All vaults overview
+```
+
+Per-vault metrics:
+- **TVL**: `get_total_assets` in USD
+- **Share price**: `convert_to_assets(1e18)` / 1e18 — share price trend
+- **Deposit capacity**: `get_max_deposit`
+- **Fee summary**: `get_fees` breakdown
+- **Market allocation**: cap groups and current allocation vs caps
+
+**Protocol-Wide Analytics**:
+```
+templar analytics protocol                              # Protocol-wide summary
+```
+
+Aggregated metrics:
+- Total protocol TVL (sum of all markets + vaults)
+- Total number of positions across all markets
+- Total borrowed vs total supplied
+- Registry deployment count
+
+**Output formats**:
+- `--output json` for machine-readable data (integration with dashboards, Grafana, etc.)
+- `--output table` for human-readable terminal output
+- `--output csv` for spreadsheet/analysis tools
+
+**Tests**:
+- Mock RPC responses for multi-market aggregation
+- Correct USD conversion with oracle prices
+- Utilization rate calculation edge cases (0 supply, full utilization)
+- CSV and JSON output format validation
+- Snapshot trend computation
+
+### 5.3 Vault Governance Commands
 ```
 templar vault set-curator <vault-id> <account>
 templar vault submit-cap <vault-id> <market> <cap>
@@ -732,15 +993,6 @@ templar vault reallocate <vault-id> <delta-json>
 templar vault skim <vault-id> <token-id>
 ```
 
-### 5.2 Cross-Chain Deposit Tracking
-- Integration with Intents bridge API
-- `templar deposit track <chain> <tx-hash>` — track cross-chain deposit status
-- `templar deposit address <chain>` — get deposit address for supported chain
-
-### 5.3 Monitoring Integration
-- `templar monitor balance <account-id>` — check funder account balance
-- `templar monitor screen <account-id> <chain>` — TRM screening (if API available)
-
 ### 5.4 Batch Operations
 - `templar batch <file.json>` — execute multiple operations from JSON file
 - Dry-run mode: `templar batch --dry-run <file.json>`
@@ -751,7 +1003,8 @@ templar vault skim <vault-id> <token-id>
 - Auto-complete contract IDs, account IDs from config
 
 ### 5.6 Documentation (Phase 5)
-- mdbook pages for governance, monitoring, batch, completions
+- mdbook pages for analytics, governance, batch, completions
+- mdbook `analytics.md` — what's tracked, how to opt in/out, data privacy
 - Architecture page for contributors
 - Complete glossary
 
@@ -764,8 +1017,8 @@ templar vault skim <vault-id> <token-id>
 | **1: Foundation** | Project scaffold, config, display, vendored types, test infra | None | Config parsing, type serde, display formatting |
 | **2: NEAR Contracts** | All Templar contract wrappers, NEAR signing, backend/Pyth clients | Phase 1 + NEAR crates | Mock RPC, contract call construction, CLI E2E |
 | **3: Multichain Auth** | Key import/encrypt for 4 chains, auth dispatch, UA lookup | Phase 2 + crypto crates | Key round-trips, signing verification, dispatch |
-| **4: UA Relay** | Sign-and-relay flow, PoW, all write ops via UA | Phase 3 + relayer API | Full relay flow, envelope construction, PoW |
-| **5: Advanced** | Governance, monitoring, batch, completions, cross-chain | Phase 4 + bridge API | Governance flows, batch parsing, E2E |
+| **4: UA Relay + Bridging** | Sign-and-relay, PoW, Hot Bridge + Intents Bridge, all cross-chain ops | Phase 3 + relayer + bridge APIs | Full relay flow, intent signing, bridge mocks |
+| **5: Analytics + Advanced** | CLI telemetry, contract analytics, governance, batch, completions | Phase 4 + analytics endpoint | Analytics collection, aggregation, opt-in/out |
 
 ---
 
@@ -776,9 +1029,9 @@ templar vault skim <vault-id> <token-id>
 | 1: Foundation | ~12 | ~1,800 | ~5 | ~1,200 |
 | 2: NEAR Contracts | ~15 | ~3,500 | ~8 | ~3,000 |
 | 3: Multichain Auth | ~8 | ~1,500 | ~3 | ~1,200 |
-| 4: UA Relay | ~6 | ~1,800 | ~3 | ~1,500 |
-| 5: Advanced | ~6 | ~1,400 | ~3 | ~1,000 |
+| 4: UA Relay + Bridging | ~12 | ~3,500 | ~7 | ~3,000 |
+| 5: Analytics + Advanced | ~8 | ~2,000 | ~4 | ~1,500 |
 
-**Total**: ~47 source files, ~10,000 lines of implementation + ~22 test files, ~7,900 lines of tests + mdbook guide (~20 pages) + comprehensive rustdoc
+**Total**: ~55 source files, ~12,300 lines of implementation + ~27 test files, ~9,900 lines of tests + mdbook guide (~25 pages) + comprehensive rustdoc
 
 **Coverage target**: 95%+ enforced in CI via `cargo-llvm-cov`
