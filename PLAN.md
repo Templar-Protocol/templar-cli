@@ -4,9 +4,12 @@
 
 Build `templar-cli`, a Rust CLI tool for interacting with Templar Protocol contracts and services across multiple blockchains. The CLI will support NEAR, Solana, Stellar, and EVM chains through Templar's Universal Account abstraction, and provide both direct on-chain reads and relayer-mediated write operations.
 
-**Cross-chain asset support**: BTC, XRP, ADA, LTC, ZEC, DOGE, SOL, XLM, ETH, and ERC-20 tokens are bridged via two complementary systems:
-- **Hot Bridge** (`v2_1.omni.hot.tg`) — NEP-245 multi-token bridge for assets like XLM, ZEC, and Stellar-based tokens. Uses `bridge-refuel.hot.tg` for gasless withdrawals. Assets are represented as NEP-245 multi-tokens on NEAR.
-- **Intents Bridge** (Defuse/1click — `bridge.chaindefuser.com`) — NEP-141 OMFT bridge for BTC, DOGE, LTC, ADA, XRP, ETH, SOL, and ERC-20 tokens. Assets are represented as `*.omft.near` tokens (NEP-141) on NEAR.
+**Cross-chain asset support**: BTC, XRP, ADA, LTC, ZEC, DOGE, SOL, XLM, ETH, and ERC-20 tokens are bridged via the **NEAR Intents** system (`bridge.chaindefuser.com`). All cross-chain assets are represented as **NEP-245 multi-tokens** within the `intents.near` verifier contract on NEAR:
+
+- **Token model**: `Nep245 { contract_id: "intents.near", token_id: "nep141:<asset>.omft.near" }` — underlying NEP-141 OMFT contracts are wrapped inside the `intents.near` NEP-245 multi-token contract. Templar market contracts receive these via `mt_on_transfer` (NEP-245), not `ft_on_transfer` (NEP-141).
+- **Stellar assets**: Use the Hot Bridge infrastructure (`v2_1.omni.hot.tg`) within the Intents ecosystem. These are natively NEP-245 with opaque token IDs (e.g., `1100_111bzQBB5v7Ah...`). Gasless withdrawals route through `bridge-refuel.hot.tg`.
+- **All other assets** (BTC, XRP, ADA, LTC, ZEC, DOGE, ETH, SOL, ERC-20): Use OMFT contracts (`*.omft.near`) accessed as NEP-245 tokens through `intents.near`.
+- **Bridge priority**: Intents/Defuse SDK is the **default and primary** bridge system. The Hot Bridge infrastructure (`hot.tg` contracts) operates within the Intents ecosystem as the routing mechanism for Stellar-chain assets — it is not a separate competing bridge but rather a component of the Intents bridge for specific chains. If an asset is unavailable via the primary Intents route, the CLI will attempt Hot Bridge routing as a **fallback**.
 
 Development follows **test-driven development (TDD)** throughout — tests are written before implementation for every module, targeting **95%+ code coverage**. Both **human-readable guide documentation** (mdbook) and **comprehensive Rust API docs** (rustdoc) are produced alongside the code.
 
@@ -112,9 +115,8 @@ templar-cli/
 │   ├── bridge/
 │   │   ├── mod.rs                     # Bridge layer overview, BridgeProvider trait
 │   │   ├── chains.rs                  # Supported chains enum + chain metadata
-│   │   ├── assets.rs                  # Asset registry: token → bridge route mapping
-│   │   ├── hot.rs                     # Hot Bridge client (NEP-245 multi-token deposits/withdrawals)
-│   │   ├── intents.rs                 # Intents/Defuse bridge client (OMFT NEP-141 deposits/withdrawals)
+│   │   ├── assets.rs                  # Asset registry: token → bridge route mapping (NEP-245 via intents.near)
+│   │   ├── intents.rs                 # Primary Intents/Defuse bridge client (FtWithdraw + MtWithdraw intents)
 │   │   ├── deposit.rs                 # Unified deposit flow: get address → notify → track
 │   │   ├── withdraw.rs               # Unified withdrawal flow: create intent → sign → submit
 │   │   └── solver.rs                  # Solver relayer client (publish_intents, get_status)
@@ -328,8 +330,27 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 - **Tests**: error display formatting, error conversions, all variants round-trip through Display
 
 ### 1.3 Configuration System (`src/config/`)
+
+**Verified against codebase**: NO file permission management exists anywhere in the Templar ecosystem. All existing tools (`market-config-cli`, monitoring, services) use bare `std::fs::write()` without permission setting. This is net new infrastructure.
+
 - Config file at `~/.templar/config.toml` (or `$TEMPLAR_CONFIG`)
 - `Profile` struct with all network settings (RPC URLs, contract IDs, chain IDs, bridge endpoints)
+
+**File permission enforcement** (`validate_config_permissions` function):
+- Called during config load (in `Profile::load_from_file()` and `Config::load()`)
+- On **write/save**: create config file with mode `0o600` (owner read/write only) using `std::fs::OpenOptions` + `std::os::unix::fs::OpenOptionsExt::mode(0o600)`
+- On **load**: call `validate_config_permissions(path)` which inspects file metadata:
+  - If group or other bits are set (not `0o600`): emit a clear warning: `"WARNING: Config file {path} has overly permissive permissions ({mode}). Run 'chmod 600 {path}' to fix."`
+  - Log the warning but do NOT fail (to avoid breaking existing setups)
+  - If `--strict-permissions` flag is set: error and refuse to load
+- `~/.templar/` directory itself: created with mode `0o700`
+- `$TEMPLAR_CONFIG` env var: documented that users should avoid world-readable paths; the permission check applies regardless of the config source
+
+**Credential separation**:
+- Sensitive credentials (keys, passwords) are stored in `~/.templar/keys/` (separate from config)
+- Config file (`config.toml`) contains only URLs, contract IDs, and preferences — no secrets
+- This separation allows config to have relaxed permissions if needed while keys remain strict
+
 - Built-in `mainnet` and `testnet` profiles with sensible defaults:
   ```toml
   [profiles.mainnet]
@@ -359,6 +380,13 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
   - Missing config file creates defaults gracefully
   - Profile switching works
   - Invalid TOML produces clear error
+  - **Permission tests** (Unix-only, `#[cfg(unix)]`):
+    - Newly created config file has mode `0o600`
+    - `~/.templar/` directory created with mode `0o700`
+    - `validate_config_permissions` warns on `0o644` (group/world readable)
+    - `validate_config_permissions` passes on `0o600`
+    - `--strict-permissions` flag rejects overly permissive files
+    - Config load with `$TEMPLAR_CONFIG` pointing to world-readable file emits warning
 
 ### 1.4 Output Formatting (`src/display/`)
 - `OutputFormat` enum: `Table`, `Json`
@@ -416,6 +444,9 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 **Goal**: Wrap all Templar contract functionality as CLI commands using `near-cli-rs` / NEAR crates for direct on-chain interaction. This covers all read AND write operations that use standard NEAR signing (not multichain Universal Account).
 
 ### 2.1 NEAR RPC Client (`src/near/rpc.rs`)
+
+**Verified against codebase**: The existing ecosystem has three distinct retry patterns — `tokio-retry` in templar-monitoring (100ms base, 1s max, 3 retries), custom retry in liquidator (2s base, 3 attempts, with error classification), and polling backoff in liquidator RPC (500ms → 5s cap). The market-config-cli has NO retry. We adopt a unified approach inspired by the liquidator's error classification pattern.
+
 - Trait `NearRpcClient` for testability:
   ```rust
   #[async_trait]
@@ -429,11 +460,65 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
   ```
 - Implementation backed by `near-jsonrpc-client`
 - Configurable RPC URL from profile
-- Retry logic with exponential backoff for transient failures
-- **Tests**:
+
+**Retry & timeout constants** (defined in `src/near/rpc.rs`):
+```rust
+/// Maximum retry attempts for transient failures
+pub const MAX_RETRIES: u32 = 3;
+/// Initial backoff delay between retries
+pub const INITIAL_BACKOFF_MS: u64 = 200;
+/// Backoff multiplier (exponential)
+pub const BACKOFF_MULTIPLIER: f64 = 2.0;
+/// Maximum backoff delay cap
+pub const MAX_BACKOFF_MS: u64 = 5_000;
+/// Total timeout for a single RPC call (including retries)
+pub const TOTAL_TIMEOUT_MS: u64 = 30_000;
+/// Timeout for a single view call attempt
+pub const VIEW_CALL_TIMEOUT_MS: u64 = 10_000;
+/// Timeout for transaction send attempt
+pub const SEND_TX_TIMEOUT_MS: u64 = 30_000;
+
+/// HTTP status codes that trigger retry
+pub const RETRYABLE_STATUS_CODES: &[u16] = &[500, 502, 503, 504, 520, 521, 522, 523, 524];
+/// Whether to retry on connection timeout
+pub const RETRY_ON_TIMEOUT: bool = true;
+/// Whether to retry on connection refused
+pub const RETRY_ON_CONN_REFUSED: bool = true;
+```
+
+**Retry policy by method type**:
+- **View calls** (`view_function`, `view_account`, `access_key`): Idempotent — retry up to `MAX_RETRIES` on transient failures (5xx, timeout, connection refused). 4xx errors are NEVER retried.
+- **Transaction sends** (`send_transaction`): **Non-idempotent — special handling required**. On `TimeoutError`: do NOT re-send. Instead, poll `tx_status` with exponential backoff (500ms → 1s → 2s → 4s → 5s cap, matching the liquidator's existing polling pattern) to check if the transaction landed. On confirmed failure (not timeout): do not retry. On `InvalidNonce`: refresh nonce and retry once.
+- **Transaction status** (`tx_status`): Idempotent — retry on transient failures.
+
+**Error classification** (inspired by liquidator's `SwapErrorKind`):
+```rust
+pub enum RpcErrorKind {
+    /// 4xx errors — invalid request, NEVER retry
+    ClientError,
+    /// 5xx errors — server transient, retry
+    ServerError,
+    /// Network timeout — retry (view) or poll status (send_tx)
+    Timeout,
+    /// Connection refused — retry with backoff
+    ConnectionRefused,
+    /// Contract execution error (e.g., "insufficient balance") — NEVER retry
+    ContractError,
+    /// Invalid nonce — refresh and retry once
+    InvalidNonce,
+}
+```
+
+**Tests**:
   - Mock RPC responses for each method
-  - Error handling: timeout, invalid response, contract not found
-  - Retry logic triggers on 5xx, skips on 4xx
+  - Retry triggers on 5xx status codes, NOT on 4xx
+  - Retry triggers on timeout and connection refused
+  - Max attempts enforced (exactly `MAX_RETRIES + 1` total attempts)
+  - Backoff progression: 200ms → 400ms → 800ms (capped at 5000ms)
+  - Total timeout enforced: abort after `TOTAL_TIMEOUT_MS`
+  - Transaction send: timeout triggers poll-for-status (not re-send)
+  - Transaction send: `InvalidNonce` triggers nonce refresh + single retry
+  - Transaction send: confirmed contract failure is NOT retried
 
 ### 2.2 NEAR Transaction Builder (`src/near/tx_builder.rs`)
 - Build `Transaction` with actions: `FunctionCall`, `Transfer`
@@ -624,19 +709,60 @@ templar tx status <tx-hash> --signer <account-id>
 **Goal**: Support multichain wallet authentication for signing transactions via Universal Account.
 
 ### 3.1 Key Storage (`src/auth/keystore.rs`)
-- Encrypted keystore at `~/.templar/keys/`
+
+**Verified against codebase**: NO key encryption exists anywhere in the Templar ecosystem today. All services (relayer, liquidator, blockchain-gateway) store signing keys as plaintext env vars parsed into `InMemorySigner` at startup. The market-config-cli does not handle keys at all. This keystore is entirely net new infrastructure.
+
+- Encrypted keystore at `~/.templar/keys/` (directory created with mode `0o700`)
 - Support importing keys for each chain type:
   - NEAR: ed25519 keypair (compatible with `~/.near-credentials/`)
   - Solana: ed25519 keypair (compatible with `~/.config/solana/id.json`)
   - EVM: secp256k1 private key (hex or keystore JSON)
   - Stellar: ed25519 secret key (S... format)
-- Password-based encryption (argon2 + AES-256-GCM)
-- **Tests** (written first):
-  - Import and retrieve each key type
-  - Encryption round-trip with correct password
-  - Wrong password fails with clear error
-  - File permissions are restrictive (0600)
-  - Key listing shows types and aliases without exposing secrets
+
+**Encryption specification** (Argon2id + AES-256-GCM):
+```rust
+pub struct KeyDerivationParams {
+    pub algorithm: Argon2id,         // MUST be Argon2id (not Argon2d or Argon2i)
+    pub memory_cost_kib: u32,        // >= 65536 (64 MiB)
+    pub iterations: u32,             // >= 3
+    pub parallelism: u32,            // 4
+    pub salt: [u8; 16],              // 16-byte random salt, unique per key file
+    pub output_length: usize,        // 32 bytes (256-bit AES key)
+}
+```
+- Each key file stores: `{ version, kdf_params, nonce, ciphertext, key_type, alias }` as JSON
+- Individual key files written with mode `0o600` (owner read/write only)
+- AES-256-GCM nonce: 12 bytes, randomly generated per encryption operation
+- Key material zeroed from memory after use (`zeroize` crate)
+
+**Password policy** (enforced in `encrypt_key` / password-entry logic):
+- Minimum length: 12 characters
+- Basic entropy validation: must contain at least 2 of { uppercase, lowercase, digit, special }
+- Reject passwords matching common weak patterns (top-1000 list)
+- Display entropy estimate to user during creation
+- Reject passwords shorter than 16 chars with a warning (allow override with `--force`)
+
+**Secure backup/import CLI flow**:
+```
+templar config export-keys --output <path>    # Encrypted portable JSON backup
+templar config import-keys --source <path>    # Import from encrypted backup
+```
+- Export writes a portable encrypted JSON file containing all keys, encrypted with a user-provided backup password
+- Import prompts for backup password, decrypts, and re-encrypts with the local keystore password
+- Documentation: backups are encrypted but must be stored securely; recovery is impossible without the backup password
+
+**Tests** (written first):
+  - Argon2id parameters match specification (memory_cost, iterations, parallelism, salt length, output length)
+  - Import and retrieve each key type (NEAR, Solana, EVM, Stellar)
+  - Encryption round-trip with correct password succeeds
+  - Wrong password fails with clear `CliError::InvalidPassword` (not a generic error)
+  - Password policy: reject < 12 chars, reject low-entropy passwords
+  - Password policy: accept strong passwords >= 12 chars with sufficient complexity
+  - File permissions are `0o600` on created key files (Unix-only test)
+  - Key listing shows types and aliases without exposing secret material
+  - Backup export/import round-trip: export → import on clean keystore → keys match
+  - Backup with wrong password fails cleanly
+  - Memory zeroization: verify `Drop` impl zeroes key material (via `zeroize` assertions)
 
 ### 3.2 Auth Method Dispatch (`src/auth/mod.rs`)
 - `AuthMethod` enum: `Near`, `Solana`, `Evm`, `Stellar`
@@ -681,10 +807,61 @@ templar ua whoami
 **Goal**: Sign and relay transactions through the Universal Account relayer AND enable cross-chain deposits/withdrawals via Hot Bridge + Intents Bridge.
 
 ### 4.1 Relayer Client (`src/client/relayer.rs`)
-- V0 relay: `POST /relay` (Solana, Passkey)
-- V1 relay: `POST /universal_account/relay` (Stellar, EVM)
+
+**Verified against codebase**: The existing relayer (`contracts/service/relayer/`) uses NO API key — authentication is via cryptographic signature verification + gas allowance model. Responses use a three-tier `SimpleResponse<T>` enum: `Success` (200), `Rejected` (400, should NOT be retried), `Failure` (500, transient/retryable). The relayer maintains a method allowlist for sponsored transactions.
+
+**Endpoints**:
+- V0 relay: `POST /relay` (Solana, Passkey — meta-transaction relay)
+- V1 relay: `POST /universal_account/relay` (Stellar, EVM — UA relay with chain_id)
 - UA creation: `POST /universal_account/create`
-- **Tests**: wiremock for relay endpoint, verify payload structure per version
+- Allowance check: `GET /get_allowance`
+
+**`RelayerConfig` struct** (wired into all relay calls):
+```rust
+pub struct RelayerConfig {
+    /// V0 relayer URL (passkey, solana)
+    pub v0_url: String,
+    /// V1 relayer URL (stellar, evm)
+    pub v1_url: String,
+    /// Request timeout per call (default: 30s)
+    pub timeout: Duration,
+    /// Retry policy for transient failures
+    pub retry_policy: RetryPolicy,
+    /// Whether to allow direct on-chain submission as fallback
+    pub allow_direct_fallback: bool,
+}
+
+pub struct RetryPolicy {
+    pub max_retries: u32,                // default: 3
+    pub initial_backoff_ms: u64,         // default: 500
+    pub backoff_multiplier: f64,         // default: 2.0
+    pub max_backoff_ms: u64,             // default: 10_000
+}
+```
+
+**Error handling** (matching relayer's existing three-tier model):
+- `RelayerError::Rejected { reason }` — maps to 400 responses. NEVER retried (invalid signature, unknown method, insufficient allowance, disallowed function call)
+- `RelayerError::TransientFailure { error }` — maps to 500 responses. Retried with exponential backoff (RPC failures, gas estimation errors, storage deposit failures)
+- `RelayerError::Timeout` — request timeout. Retried.
+- `RelayerError::RateLimited` — 429 response. Retried with extended backoff.
+- `RelayerError::ContractError { .. }` — on-chain contract execution failure. NOT retried.
+
+**Client-side rate tracking**: Track recent request timestamps per endpoint. If approaching rate limits (configurable, default: 10 req/s), queue requests client-side before hitting the relayer.
+
+**`--direct` fallback flag**: When `--direct` is passed (or `allow_direct_fallback` is configured), the CLI bypasses the relayer entirely and submits the transaction directly on-chain using the NEAR signer from Phase 2. This is useful when the relayer is down or the user has a full-access key.
+
+**User notification points**:
+- After 2 failed retries: warn "Relayer may be experiencing issues, retrying..."
+- After all retries exhausted: suggest `--direct` flag if user has NEAR credentials
+- On allowance exhaustion: display remaining allowance and suggest waiting
+
+**Tests**:
+- wiremock for relay endpoints: verify payload structure per version (V0 vs V1)
+- Retry logic: verify 400s are NOT retried, 500s ARE retried with correct backoff
+- Rate limiting: 429 triggers extended backoff
+- `--direct` fallback: bypasses relayer, submits on-chain
+- Error classification: verify `Rejected` vs `TransientFailure` mapping
+- Allowance check integration
 
 ### 4.2 Signing Envelope (`src/signing/envelope.rs`)
 - V0: `\x19UAccount Signed Message:\n` + JSON payload (Ed25519Raw)
@@ -721,31 +898,33 @@ Sign intents for cross-chain withdrawals, supporting all auth methods:
 
 #### 4.6.1 Supported Chains & Assets (`src/bridge/chains.rs`, `assets.rs`)
 
-Complete asset registry mapping each asset to its bridge route:
+Complete asset registry mapping each asset to its Templar representation.
 
-| Asset | Chain ID | Bridge | NEAR Token | Decimals | Type |
-|-------|----------|--------|------------|----------|------|
-| BTC | `btc:mainnet` | Intents | `btc.omft.near` | 8 | NEP-141 OMFT |
-| XRP | `xrp:mainnet` | Intents | `xrp.omft.near` | 6 | NEP-141 OMFT |
-| ADA | `cardano:mainnet` | Intents | `cardano.omft.near` | 6 | NEP-141 OMFT |
-| LTC | `ltc:mainnet` | Intents | `ltc.omft.near` | 8 | NEP-141 OMFT |
-| ZEC | `zec:mainnet` | Intents | `zec.omft.near` | 8 | NEP-141 OMFT |
-| DOGE | `doge:mainnet` | Intents | `doge.omft.near` | 8 | NEP-141 OMFT |
-| ETH | `eth:1` | Intents | `eth.omft.near` | 18 | NEP-141 OMFT |
-| SOL | `sol:mainnet` | Intents | Various OMFT | varies | NEP-141 OMFT |
-| XLM | `stellar:mainnet` | Hot Bridge | `v2_1.omni.hot.tg` | 7 | NEP-245 MT |
-| USDC (Stellar) | `stellar:mainnet` | Hot Bridge | `v2_1.omni.hot.tg` | 7 | NEP-245 MT |
-| USDC (ETH) | `eth:1` | Intents | `eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near` | 6 | NEP-141 OMFT |
-| USDT (ETH) | `eth:1` | Intents | `eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near` | 6 | NEP-141 OMFT |
-| WBTC (ETH) | `eth:1` | Intents | `eth-0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.omft.near` | 8 | NEP-141 OMFT |
+**Important**: All cross-chain assets in Templar are accessed as **NEP-245 multi-tokens** via the `intents.near` verifier contract, regardless of their underlying bridge mechanism. The `token_id` within `intents.near` encodes the underlying OMFT contract.
 
-- `AssetRegistry` struct with lookup by symbol, chain, and NEAR token ID
-- `BridgeRoute` enum: `IntentsBridge` (NEP-141 OMFT) | `HotBridge` (NEP-245 MT)
-- **Tests**: all asset lookups resolve correctly, NEAR token IDs match real contracts
+| Asset | Chain ID | Templar Asset Config | `intents.near` token_id | Decimals | Withdrawal Intent |
+|-------|----------|---------------------|------------------------|----------|-------------------|
+| BTC | `btc:mainnet` | `Nep245 { intents.near }` | `nep141:btc.omft.near` | 8 | `FtWithdraw` via `btc.omft.near` |
+| XRP | `xrp:mainnet` | `Nep245 { intents.near }` | `nep141:xrp.omft.near` | 6 | `FtWithdraw` via `xrp.omft.near` |
+| ADA | `cardano:mainnet` | `Nep245 { intents.near }` | `nep141:cardano.omft.near` | 6 | `FtWithdraw` via `cardano.omft.near` |
+| LTC | `ltc:mainnet` | `Nep245 { intents.near }` | `nep141:ltc.omft.near` | 8 | `FtWithdraw` via `ltc.omft.near` |
+| ZEC | `zec:mainnet` | `Nep245 { intents.near }` | `nep141:zec.omft.near` | 8 | `FtWithdraw` via `zec.omft.near` |
+| DOGE | `doge:mainnet` | `Nep245 { intents.near }` | `nep141:doge.omft.near` | 8 | `FtWithdraw` via `doge.omft.near` |
+| ETH | `eth:1` | `Nep245 { intents.near }` | `nep141:eth.omft.near` | 18 | `FtWithdraw` via `eth.omft.near` |
+| XLM | `stellar:mainnet` | `Nep245 { intents.near }` | `nep245:v2_1.omni.hot.tg:1100_...` | 7 | `MtWithdraw` via `bridge-refuel.hot.tg` |
+| USDC (Stellar) | `stellar:mainnet` | `Nep245 { intents.near }` | `nep245:v2_1.omni.hot.tg:1100_...` | 7 | `MtWithdraw` via `bridge-refuel.hot.tg` |
+| USDC (ETH) | `eth:1` | `Nep245 { intents.near }` | `nep141:eth-0xa0b8...omft.near` | 6 | `FtWithdraw` via `eth-0xa0b8...omft.near` |
+| USDT (ETH) | `eth:1` | `Nep245 { intents.near }` | `nep141:eth-0xdac1...omft.near` | 6 | `FtWithdraw` via `eth-0xdac1...omft.near` |
+| WBTC (ETH) | `eth:1` | `Nep245 { intents.near }` | `nep141:eth-0x2260...omft.near` | 8 | `FtWithdraw` via `eth-0x2260...omft.near` |
+
+- `AssetRegistry` struct with lookup by symbol, chain, and `intents.near` token_id
+- `BridgeRoute` enum: `IntentsOmft` (OMFT assets via `FtWithdraw` intent) | `IntentsHotMt` (Stellar assets via `MtWithdraw` intent through `bridge-refuel.hot.tg`)
+- Both routes use the same bridge API (`bridge.chaindefuser.com/rpc`) — the difference is only in the withdrawal intent type
+- **Tests**: all asset lookups resolve correctly, token_ids match real contract configs from `contracts/contract/market/examples/config/`
 
 #### 4.6.2 Intents Bridge Client (`src/bridge/intents.rs`)
 
-Wraps the Defuse/1click bridge API at `bridge.chaindefuser.com/rpc`:
+**Primary and default** bridge system. Wraps the NEAR Intents bridge API at `bridge.chaindefuser.com/rpc` (JSON-RPC 2.0). This is the single bridge endpoint — all deposit/withdrawal operations go through it, matching the existing frontend and funding-bridge patterns.
 
 - `deposit_address(account_id, chain)` → `DepositAddressResult` (address + optional memo)
   - Stellar uses `deposit_mode: "MEMO"` for shared address + memo deposits
@@ -755,7 +934,7 @@ Wraps the Defuse/1click bridge API at `bridge.chaindefuser.com/rpc`:
 - `withdrawal_estimate(chain, token, address)` → fee + min amounts
 - `withdrawal_status(withdrawal_hash)` → status tracking
 
-**Withdrawal intent construction** (for NEP-141 OMFT assets):
+**Withdrawal intent construction — OMFT assets** (BTC, XRP, ADA, LTC, ZEC, DOGE, ETH, ERC-20):
 ```rust
 Intent::FtWithdraw {
     token: "btc.omft.near",           // NEAR OMFT contract
@@ -765,19 +944,10 @@ Intent::FtWithdraw {
 }
 ```
 
-**Tests**: wiremock for all JSON-RPC endpoints, fixture-based response verification
-
-#### 4.6.3 Hot Bridge Client (`src/bridge/hot.rs`)
-
-Wraps the Hot Bridge for NEP-245 multi-token assets (XLM, Stellar-based tokens):
-
-- Deposit: Same `deposit_address` API (bridge.chaindefuser.com) — assets arrive as NEP-245 tokens on `v2_1.omni.hot.tg`
-- Withdrawal: Uses `mt_withdraw` intent via `bridge-refuel.hot.tg` for gasless bridging
-
-**Withdrawal intent construction** (for NEP-245 MT assets):
+**Withdrawal intent construction — Stellar/Hot assets** (XLM, Stellar USDC):
 ```rust
 Intent::MtWithdraw {
-    token: "v2_1.omni.hot.tg",                   // Hot Bridge MT contract
+    token: "v2_1.omni.hot.tg",                   // Hot infrastructure MT contract
     receiver_id: "bridge-refuel.hot.tg",          // Gasless bridge refuel
     token_ids: vec!["1100_111bzQBB5v7Ah..."],     // Stellar-specific token ID
     amounts: vec!["10000000"],                     // 1 XLM (7 decimals)
@@ -791,9 +961,10 @@ Intent::MtWithdraw {
 ```
 
 - Stellar address encoding: G... → XDR ScVal → base58 (matching `encode_receiver` from funding-bridge)
-- **Tests**: verify mt_withdraw intent construction, stellar address encoding, token ID resolution
+- **Fallback**: If the primary Intents route returns an error for a specific asset, attempt Hot Bridge routing directly via `v2_1.omni.hot.tg` as a fallback before failing
+- **Tests**: wiremock for all JSON-RPC endpoints, fixture-based response verification, verify both FtWithdraw and MtWithdraw intent construction, stellar address encoding
 
-#### 4.6.4 Solver Relayer Client (`src/bridge/solver.rs`)
+#### 4.6.3 Solver Relayer Client (`src/bridge/solver.rs`)
 
 Submits signed intents to the solver relayer:
 
@@ -804,7 +975,7 @@ The `signed_data` varies by auth method (see Intent Signing table in 4.5).
 
 - **Tests**: wiremock for publish/status endpoints, auth method payloads
 
-#### 4.6.5 Unified Deposit/Withdraw Flows (`src/bridge/deposit.rs`, `withdraw.rs`)
+#### 4.6.4 Unified Deposit/Withdraw Flows (`src/bridge/deposit.rs`, `withdraw.rs`)
 
 **Deposit flow**:
 1. Determine bridge route from asset symbol → `IntentsBridge` or `HotBridge`
@@ -994,9 +1165,87 @@ templar vault skim <vault-id> <token-id>
 ```
 
 ### 5.4 Batch Operations
-- `templar batch <file.json>` — execute multiple operations from JSON file
-- Dry-run mode: `templar batch --dry-run <file.json>`
-- Useful for automated workflows and CI/CD
+
+**Verified against codebase**: No CLI-level batch operations exist. The only batch patterns are contract-level `batch_limit` params (vault/market withdrawal queues) and the relayer's broom background job. `schemars::JsonSchema` is used in the universal-account crate for type schema generation, which we can leverage for batch format validation.
+
+**JSON schema validation**:
+- Define a `BatchFile` JSON schema (generated via `schemars::JsonSchema` derive, matching the universal-account pattern)
+- Pre-parse step validates the entire batch file against the schema BEFORE any execution
+- If ANY operation fails to parse, the entire batch is rejected with detailed errors including operation index:
+  ```
+  Error: Batch validation failed:
+    [2]: Invalid market-id "not-a-contract" — must be a valid NEAR account ID
+    [5]: Unknown command "supply.yolo" — did you mean "supply.deposit"?
+    [7]: Missing required field "amount"
+  ```
+- Configurable `max_operations` limit (default: 100, configurable via `--max-ops` or config):
+  ```
+  Error: Batch exceeds maximum operation limit (150 > 100). Use --max-ops to increase.
+  ```
+
+**Dry-run mode** (`templar batch --dry-run <file.json>`):
+- Simulates all operations without on-chain writes
+- For each operation, estimates:
+  - Gas cost (via RPC `estimate_gas` or known defaults per method)
+  - Token amounts and USD values (via oracle prices)
+  - Expected state changes (e.g., "will create supply position of 1.5 BTC")
+- **Flags high-risk operations** in the report:
+  - Large transfers: amount > configurable threshold (default: $10,000 USD equivalent)
+  - Key removals: `ua remove-key` operations
+  - Governance changes: `vault set-curator`, `vault set-fees`, `vault reallocate`
+  - First-time interactions: operations on contracts the account hasn't interacted with before
+- Dry-run report format:
+  ```
+  Batch dry-run report (12 operations):
+
+  [1] supply.deposit market.v1.tmplr.near 1.5 BTC
+      Gas: ~100 TGas (~0.01 NEAR)  |  Value: ~$65,250 USD
+      ⚠️  HIGH VALUE: amount exceeds $10,000 threshold
+
+  [2] ua.remove-key ed25519 HNf8...
+      Gas: ~50 TGas (~0.005 NEAR)
+      ⚠️  KEY REMOVAL: this action removes a signing key
+
+  Total estimated gas: ~850 TGas (~0.085 NEAR)
+  Total value at risk: ~$127,500 USD
+  High-risk operations: 3
+  ```
+
+**Confirmation & audit logging**:
+- High-value or flagged batches require explicit confirmation: `"This batch contains 3 high-risk operations. Type 'CONFIRM' to proceed:"`
+- `--yes` flag skips confirmation for non-flagged batches only; flagged batches ALWAYS confirm unless `--yes --force` is used
+- Audit log written to `~/.templar/audit.log` (append-only) for every batch execution:
+  ```json
+  {"timestamp": "2026-02-27T15:30:00Z", "user": "alice.near", "batch_hash": "sha256:abc123...", "operations": 12, "dry_run": false, "result": "completed", "failed_ops": []}
+  ```
+
+**Failure behavior** (configurable via `--on-failure`):
+- `--on-failure abort` (default): Atomic abort-on-first-failure. Stop execution immediately, report which operation failed and why, report which operations completed before failure.
+- `--on-failure continue`: Continue executing remaining operations. Produce a structured report at the end:
+  ```json
+  {
+    "total": 12,
+    "succeeded": 10,
+    "failed": 2,
+    "results": [
+      {"index": 0, "status": "success", "tx_hash": "ABC..."},
+      {"index": 3, "status": "failed", "error": "Insufficient balance", "error_code": "CONTRACT_ERROR"},
+      ...
+    ]
+  }
+  ```
+- **Rollback hooks** (for reversible operations): If an operation has a known inverse (e.g., `supply.deposit` → `supply.withdraw`, `ua.add-key` → `ua.remove-key`), the batch system can register rollback hooks. On `--on-failure abort`, offer to execute rollbacks for completed operations: `"3 operations completed before failure. Rollback? [y/N]"`
+
+**Commands**:
+```
+templar batch <file.json>                              # Execute batch
+templar batch --dry-run <file.json>                    # Simulate and report
+templar batch --validate <file.json>                   # Schema validation only
+templar batch --on-failure continue <file.json>        # Continue on failure
+templar batch --max-ops 500 <file.json>                # Custom operation limit
+```
+
+- Useful for automated workflows, CI/CD, and treasury operations
 
 ### 5.5 Shell Completions
 - `templar completions <bash|zsh|fish|powershell>` — generate shell completions
