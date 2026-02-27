@@ -110,8 +110,10 @@ impl ColorMode {
 
 /// Returns `true` when the `NO_COLOR` environment variable is set and
 /// non-empty, per <https://no-color.org/>.
+///
+/// Uses [`env::var_os`] so that non-UTF-8 values are still honoured.
 pub fn no_color_set() -> bool {
-    env::var("NO_COLOR").map_or(false, |v| !v.is_empty())
+    env::var_os("NO_COLOR").is_some_and(|v| !v.is_empty())
 }
 
 /// Returns `true` when stdout is connected to an interactive terminal.
@@ -376,20 +378,14 @@ mod tests {
 
     #[test]
     fn palette_constants_are_valid_ansi256() {
-        // ANSI-256 range is 0..=255
-        let vals = [
-            TemplarPalette::GOLD,
-            TemplarPalette::ANTIQUE_GOLD,
-            TemplarPalette::IVORY,
-            TemplarPalette::WARM_GREY,
-            TemplarPalette::CIPHER_PURPLE,
-            TemplarPalette::SUCCESS_GREEN,
-            TemplarPalette::DANGER_RED,
-            TemplarPalette::INFO_TEAL,
-        ];
-        for v in vals {
-            assert!(v <= 255);
-        }
+        assert_eq!(TemplarPalette::GOLD, 178, "GOLD should be ANSI-256 index 178");
+        assert_eq!(TemplarPalette::ANTIQUE_GOLD, 136, "ANTIQUE_GOLD should be ANSI-256 index 136");
+        assert_eq!(TemplarPalette::IVORY, 253, "IVORY should be ANSI-256 index 253");
+        assert_eq!(TemplarPalette::WARM_GREY, 144, "WARM_GREY should be ANSI-256 index 144");
+        assert_eq!(TemplarPalette::CIPHER_PURPLE, 134, "CIPHER_PURPLE should be ANSI-256 index 134");
+        assert_eq!(TemplarPalette::SUCCESS_GREEN, 77, "SUCCESS_GREEN should be ANSI-256 index 77");
+        assert_eq!(TemplarPalette::DANGER_RED, 160, "DANGER_RED should be ANSI-256 index 160");
+        assert_eq!(TemplarPalette::INFO_TEAL, 37, "INFO_TEAL should be ANSI-256 index 37");
     }
 
     #[test]

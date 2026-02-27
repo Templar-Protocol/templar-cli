@@ -54,8 +54,8 @@ async fn run_show(opts: &GlobalOpts) -> Result<(), CliError> {
     } else {
         println!("  Active profile: {}", config.active_profile);
         let profile = config.active_profile()?;
-        println!("  NEAR RPC:       {}", profile.near_rpc_url);
-        println!("  Network:        {}", profile.near_network_id);
+        println!("  NEAR RPC:       {}", opts.effective_rpc_url(profile));
+        println!("  Network:        {}", opts.effective_network(profile));
         println!("  Backend:        {}", profile.backend_url);
         println!("  Registry:       {:?}", profile.registry_contract_ids);
     }

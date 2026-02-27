@@ -24,8 +24,8 @@ impl TxCommand {
         match self {
             Self::Status { tx_hash, signer } => {
                 let config = crate::config::Config::load()?;
-                let profile = config.active_profile()?;
-                let rpc = crate::near::rpc::RpcClient::new(&profile.near_rpc_url);
+                let profile = super::markets::resolve_profile_pub(&config, opts)?;
+                let rpc = crate::near::rpc::RpcClient::new(opts.effective_rpc_url(profile));
                 let hash: near_primitives::hash::CryptoHash = tx_hash.parse()
                     .map_err(|_| CliError::InvalidInput(format!("invalid transaction hash: {tx_hash}")))?;
                 let sender: near_primitives::types::AccountId = signer.parse()

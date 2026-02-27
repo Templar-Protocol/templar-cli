@@ -65,9 +65,9 @@ impl VaultCommand {
     /// Execute the vault command.
     pub async fn run(&self, opts: &GlobalOpts) -> Result<(), CliError> {
         let config = crate::config::Config::load()?;
-        let profile = config.active_profile()?;
+        let profile = super::markets::resolve_profile_pub(&config, opts)?;
         let rpc: Arc<dyn NearRpcClient> = Arc::new(
-            crate::near::rpc::RpcClient::new(&profile.near_rpc_url),
+            crate::near::rpc::RpcClient::new(opts.effective_rpc_url(profile)),
         );
 
         match self {

@@ -89,12 +89,30 @@ impl GlobalOpts {
     pub fn no_color(&self) -> bool {
         self.color.as_deref() == Some("never") || std::env::var("NO_COLOR").is_ok()
     }
+
+    /// Returns the effective NEAR RPC URL, preferring the `--rpc-url` CLI
+    /// override over the profile value.
+    pub fn effective_rpc_url<'a>(
+        &'a self,
+        profile: &'a crate::config::profile::Profile,
+    ) -> &'a str {
+        self.rpc_url.as_deref().unwrap_or(&profile.near_rpc_url)
+    }
+
+    /// Returns the effective NEAR network ID, preferring the `--network` CLI
+    /// override over the profile value.
+    pub fn effective_network<'a>(
+        &'a self,
+        profile: &'a crate::config::profile::Profile,
+    ) -> &'a str {
+        self.network.as_deref().unwrap_or(&profile.near_network_id)
+    }
 }
 
 /// All available subcommands.
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Configuration management — init, show, import-key.
+    /// Configuration management — init, show, set.
     #[command(subcommand)]
     Config(config_cmd::ConfigCommand),
 
@@ -275,5 +293,46 @@ mod tests {
     fn cli_parses_config_show() {
         let cli = Cli::try_parse_from(["templar", "config", "show"]);
         assert!(cli.is_ok());
+    }
+
+    #[test]
+    fn effective_rpc_url_prefers_override() {
+        let cli = Cli::try_parse_from([
+            "templar", "--rpc-url", "https://custom-rpc.example.com",
+        ]).unwrap();
+        let profile = crate::config::profile::Profile::mainnet();
+        assert_eq!(
+            cli.global_opts.effective_rpc_url(&profile),
+            "https://custom-rpc.example.com"
+        );
+    }
+
+    #[test]
+    fn effective_rpc_url_falls_back_to_profile() {
+        let cli = Cli::try_parse_from(["templar"]).unwrap();
+        let profile = crate::config::profile::Profile::mainnet();
+        assert_eq!(
+            cli.global_opts.effective_rpc_url(&profile),
+            profile.near_rpc_url
+        );
+    }
+
+    #[test]
+    fn effective_network_prefers_override() {
+        let cli = Cli::try_parse_from([
+            "templar", "--network", "testnet",
+        ]).unwrap();
+        let profile = crate::config::profile::Profile::mainnet();
+        assert_eq!(cli.global_opts.effective_network(&profile), "testnet");
+    }
+
+    #[test]
+    fn effective_network_falls_back_to_profile() {
+        let cli = Cli::try_parse_from(["templar"]).unwrap();
+        let profile = crate::config::profile::Profile::mainnet();
+        assert_eq!(
+            cli.global_opts.effective_network(&profile),
+            profile.near_network_id
+        );
     }
 }

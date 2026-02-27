@@ -56,6 +56,10 @@ mod tests {
     fn default_rpc_urls() {
         assert!(NearNetwork::Mainnet.default_rpc_url().contains("mainnet"));
         assert!(NearNetwork::Testnet.default_rpc_url().contains("testnet"));
+        assert!(
+            NearNetwork::Custom("localnet".into()).default_rpc_url().is_empty(),
+            "Custom variant should return an empty sentinel URL"
+        );
     }
 
     #[test]
