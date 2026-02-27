@@ -102,66 +102,73 @@ impl TemplarPalette {
 
 #### The Templar Mark (ASCII)
 
-The Templar logo (`LogoNew` in the web frontend at `components/icons/logo-new.tsx`) is a **stylized letter T that forms a shield/crest**. Key structural features traced from the actual logo:
+The Templar logo (`LogoNew` in the web frontend at `components/icons/logo-new.tsx`) is a **stylized letter T that forms a shield/crest** — two outer arms with flared ends curving upward from a top bar, a thin center column, and a convergence to a downward point. The `@` characters form the solid body, while `:.-+=*#%` characters form the negative-space channels that create the **T** letterform.
 
-1. **Top bar** — a wide horizontal crossbar with **upturned/flared ends** that curve upward and outward (like horns or serif terminals)
-2. **Two thick outer arms** — emerge from the bar **narrow**, then **flare outward** (widen) over several rows before settling to a constant width
-3. **Thin center column** — runs straight down from the center of the bar
-4. **Parallel vertical section** — the three elements (left arm, center column, right arm) run parallel with clear gaps between them for the majority of the logo's height
-5. **Bottom convergence** — the outer arms angle inward, merge with the center column, and the merged form tapers to a **single downward point**
-
-The negative space (the gaps between the arms and center column) creates the distinctive **T** letterform. It is rendered as ASCII art in three sizes:
-
-**Full mark** (banner centerpiece, 20 lines):
+**Templar Mark** (100×57 ASCII art, used as banner centerpiece on wide terminals ≥ 110 cols):
 
 ```
-             ╱                         ╲
-            ╔═══════════════════════════╗
-            ║   ║               ║   ║
-         ═══╝    ║      ║      ║    ╚═══
-       ║         ║      ║      ║         ║
-       ║         ║      ║      ║         ║
-       ║         ║      ║      ║         ║
-       ║         ║      ║      ║         ║
-       ║         ║      ║      ║         ║
-       ║         ║      ║      ║         ║
-       ║         ║      ║      ║         ║
-       ║         ║      ║      ║         ║
-        ╲        ║      ║      ║        ╱
-          ╲      ║      ║      ║      ╱
-            ╲     ║     ║     ║     ╱
-              ╲    ║    ║    ║    ╱
-                ╲       ║       ╱
-                  ╲     ║     ╱
-                    ╲   ║   ╱
-                      ╲ ║ ╱
-                        V
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@#=*%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*=#@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@%:::.:=#%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%#+:.:::%@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@-:::::::::..-*%@@@@@@@@@@@@@@@@@@@@@@@@@@@@%*-..:::::::::-@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@+:::::::::::::::::....::::::::::::::....:::::::::::::::::+@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@%.::::::::::::::::::::::::::::::::::::::::::::::::::::::.%@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@=-----------------------::::::::------------------------@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.::::::-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.::::::-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.::::::-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@#::::::::::::::::::::::::::::::.+@@@@@:::::::-@@@@@*.:::::::::::::::::::::::::::.:.*@@@@@@@@
+@@@@@@@@+.:::::::::::::::::::::::::::::.+@@@@@:::::::-@@@@@*.::::::::::::::::::::::::::::::=@@@@@@@@
+@@@@@@@@:::::::::::::::......::--::::::.+@@@@@:::::::-@@@@@*.::::::::::......::::::::::::::.@@@@@@@@
+@@@@@@@%.:::::..:+#%%@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@%%#+:..:::::.#@@@@@@@
+@@@@@@@+:.:+#@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@#+:.:=@@@@@@@
+@@@@@@@#@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@#@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@:::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@-::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@-::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@-::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@-::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@-::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::::.+@@@@@-::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-:::::.+@@@@@-::::::-@@@@@*.::::::%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%::::.+@@@@@-::::::-@@@@@*.::::#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*::.+@@@@@-::::::-@@@@@*.::*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+:+@@@@@-::::::-@@@@@*:+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#@@@@@-::::::-@@@@@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-::::::-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-::::::-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-::::::-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@=.::.=@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@--@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ```
 
-- **Upturned ends** (`╱` / `╲` above the `╔═══╗`) capture the logo's distinctive flared/horned serif terminals.
-- **Arm flare** (`═══╝` / `╚═══`): The arms emerge narrow from the bar, then step outward to full width — matching the SVG's outward flare at the bar junction.
-- **Parallel section**: The long middle portion with three vertical elements (`║`) running in parallel, with clear whitespace gaps between them.
-- **Convergence**: The outer arms angle inward (`╲` / `╱`), merge with the center, and taper to the shield point (`V`).
-- Rendered in **Gold** with **Antique Gold** for the outer arms.
+Rendered in **Gold** (`#D5AA51`) on dark terminal backgrounds. On light terminals, use **Antique Gold** (`#AE8227`) for contrast. The non-`@` characters (`:.-+=*#%`) are rendered at reduced opacity in **Warm Grey** to create the channel/gap effect, while `@` characters use the primary brand gold.
 
-**Compact mark** (for headers, 13 lines):
-
-```
-        ╱               ╲
-       ╔═════════════════╗
-       ║  ║       ║  ║
-    ═══╝   ║  ║  ║   ╚═══
-    ║      ║  ║  ║      ║
-    ║      ║  ║  ║      ║
-    ║      ║  ║  ║      ║
-    ║      ║  ║  ║      ║
-     ╲     ║  ║  ║     ╱
-       ╲    ║ ║ ║    ╱
-         ╲    ║    ╱
-           ╲  ║  ╱
-             ╲║╱
-              V
-```
+**Space-constrained fallback** (narrow terminals < 110 cols): When terminal width cannot accommodate the full 100-char mark, fall back to the **Templar cross** `✠` or **temple glyph** `╤║╤` as the brand mark, paired with the wordmark and tagline. No scaled-down compact mark is needed.
 
 **Inline glyph** (complementary brand mark, single-line):
 ```
@@ -170,83 +177,40 @@ The negative space (the gaps between the arms and center column) creates the dis
 
 #### Startup Banner
 
-On first invocation or `templar --version`, display the full Templar banner. The design integrates the actual Templar mark (temple facade from `LogoNew`) with flanking decorative pillars inspired by the `templar-bank-graphic.png` ruined temple illustration on the homepage. The "TEMPLAR" wordmark uses **wide letter-spacing** matching the `LogoNewFull` serif wordmark (PP Fragment Glare aesthetic — all caps, generous tracking):
+On first invocation or `templar --version`, display the full Templar banner. On wide terminals (≥ 110 cols), the banner displays the full 100×57 Templar Mark ASCII art (see above) followed by the wordmark and tagline below it:
 
 ```
-  ╓─╖                                                                     ╓─╖
-  ║╿║  01101                                                      10010   ║╿║
-  ╠═╣                                                                     ╠═╣
-  ║│║                 ╱                         ╲                         ║│║
-  ║│║                ╔═══════════════════════════╗                        ║│║
-  ║│║                ║   ║               ║   ║                            ║│║
-  ║│║             ═══╝    ║      ║      ║    ╚═══                        ║│║
-  ║│║           ║         ║      ║      ║         ║                      ║│║
-  ║│║           ║         ║      ║      ║         ║                      ║│║
-  ║│║           ║         ║      ║      ║         ║                      ║│║
-  ║│║           ║         ║      ║      ║         ║                      ║│║
-  ║│║           ║         ║      ║      ║         ║                      ║│║
-  ║│║           ║         ║      ║      ║         ║                      ║│║
-  ║│║           ║         ║      ║      ║         ║                      ║│║
-  ║│║           ║         ║      ║      ║         ║                      ║│║
-  ║│║            ╲        ║      ║      ║        ╱                       ║│║
-  ║│║              ╲      ║      ║      ║      ╱                         ║│║
-  ║│║                ╲     ║     ║     ║     ╱                           ║│║
-  ║│║                  ╲    ║    ║    ║    ╱                             ║│║
-  ║│║                    ╲       ║       ╱                               ║│║
-  ║│║                      ╲     ║     ╱                                 ║│║
-  ║│║                        ╲   ║   ╱                                   ║│║
-  ║│║                          ╲ ║ ╱                                     ║│║
-  ║│║                            V                                       ║│║
-  ║│║                                                                     ║│║
-  ║│║           T  E  M  P  L  A  R                                      ║│║
-  ║│║                                                                     ║│║
-  ║│║           The First Cypher Lending Protocol                        ║│║
-  ║│║           Be Your Own Bank · v0.1.0                                ║│║
-  ║│║                                                                     ║│║
-  ║│║           01001101 01100001 01101011 01100101                      ║│║
-  ║│║           01000010 01101001 01110100 01100011                      ║│║
-  ║│║           01101111 01101001 01101110 00100000                      ║│║
-  ║│║           01000011 01111001 01110000 01101000                      ║│║
-  ║│║           01100101 01110010 01110000 01110101                      ║│║
-  ║│║           01101110 01101011 00100000                               ║│║
-  ║│║           01000001 01100111 01100001 01101001 01101110             ║│║
-  ║│║                                                                     ║│║
-  ╨┴╨━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╨┴╨
-```
-
-**Design breakdown**:
-- **Decorative pillar columns** (`╓─╖ ║╿║ ╠═╣ ║│║ ╨┴╨`): Left and right framing columns inspired by the ruined Greco-Roman temple columns in the `templar-bank-graphic.png` homepage illustration. The `╠═╣` represents the ornate Corinthian capital, `║│║` the fluted shaft, `╨┴╨` the base. Rendered in **Antique Gold**.
-- **Templar mark** (center): The T-shield logo from `LogoNew` — wide top bar (`╚═══╝`) with upturned flared ends (`╗` / `╔`), two outer arms angling inward (`╲` / `╱`), central vertical column (`║`) running straight down, all three converging to the shield point (`V`). Rendered in **Gold**.
-- **"T  E  M  P  L  A  R" wordmark**: Wide letter-spacing (double-space between letters) matching the `LogoNewFull` serif letterforms. Rendered in **Gold**.
-- **Tagline**: "The First Cypher Lending Protocol" in **Ivory**, "Be Your Own Bank · v0.1.0" in **Warm Grey**.
-- **Binary noise block**: Encodes "Make Bitcoin Cypherpunk Again" in ASCII binary — a hidden easter egg for those who decode it (documented in the user guide). Rendered in **Warm Grey** at reduced intensity.
-- **Animated binary headers** (`01101`, `10010`): The binary snippets flanking the pillar capitals cycle randomly on each render, echoing the web `BinaryMatrix` component.
-- **Temple floor**: `━━━` continuous base connecting both pillar bases.
-
-**Compact banner** (for narrow terminals < 70 cols):
-
-```
-        ╱               ╲
-       ╔═════════════════╗
-       ║  ║       ║  ║
-    ═══╝   ║  ║  ║   ╚═══
-    ║      ║  ║  ║      ║
-    ║      ║  ║  ║      ║
-    ║      ║  ║  ║      ║
-    ║      ║  ║  ║      ║
-     ╲     ║  ║  ║     ╱
-       ╲    ║ ║ ║    ╱
-         ╲    ║    ╱
-           ╲  ║  ╱
-             ╲║╱
-              V
+  [Full 100×57 Templar Mark ASCII art rendered in Gold]
 
   T  E  M  P  L  A  R
   The First Cypher Lending Protocol
   Be Your Own Bank · v0.1.0
+
+  01001101 01100001 01101011 01100101
+  01000010 01101001 01110100 01100011
+  01101111 01101001 01101110 00100000
+  01000011 01111001 01110000 01101000
+  01100101 01110010 01110000 01110101
+  01101110 01101011 00100000
+  01000001 01100111 01100001 01101001 01101110
 ```
 
-Uses the compact mark (no outer pillar frame) when terminal width is < 70 columns. Detected via `console::Term::stdout().size()`.
+**Design breakdown**:
+- **Templar Mark** (top): The full 100×57 ASCII art logo rendered in **Gold** (`#D5AA51`). The `@` body is rendered in the primary gold, while the channel characters (`:.-+=*#%`) are rendered in **Warm Grey** at reduced intensity to create the negative-space T-shield effect.
+- **"T  E  M  P  L  A  R" wordmark**: Wide letter-spacing (double-space between letters) matching the `LogoNewFull` serif letterforms. Rendered in **Gold**.
+- **Tagline**: "The First Cypher Lending Protocol" in **Ivory**, "Be Your Own Bank · v0.1.0" in **Warm Grey**.
+- **Binary noise block**: Encodes "Make Bitcoin Cypherpunk Again" in ASCII binary — a hidden easter egg for those who decode it (documented in the user guide). Rendered in **Warm Grey** at reduced intensity.
+
+**Compact banner** (for narrow terminals < 110 cols):
+
+```
+  ✠  T  E  M  P  L  A  R  ✠
+
+  The First Cypher Lending Protocol
+  Be Your Own Bank · v0.1.0
+```
+
+Uses the Templar cross `✠` as the brand mark when terminal width cannot fit the full ASCII art. Detected via `console::Term::stdout().size()`.
 
 **Banner display rules**:
 - Shown on `templar` (no subcommand), `templar --version`, `templar init`
@@ -681,8 +645,7 @@ templar-cli/
 │       ├── mod.rs                     # Output formatting dispatch (json vs table)
 │       ├── theme.rs                   # Templar brand theme: palette, voice, unicode/ASCII modes
 │       ├── banner.rs                  # Pillar banner, Templar mark, first-run, version display
-│       ├── logo.rs                    # Templar mark ASCII art (full + compact + inline variants)
-│       ├── pillars.rs                 # Corinthian pillar frames, pillar dividers
+│       ├── logo.rs                    # Templar mark 100×57 ASCII art + inline glyph variants
 │       ├── spinner.rs                 # Binary spinner, text scramble reveal, progress bars
 │       ├── frame.rs                   # Box-drawing panel/table frames (heavy + light styles)
 │       ├── table.rs                   # Table rendering for terminal (themed)
@@ -929,8 +892,8 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 - `NO_COLOR` env var support (per [no-color.org](https://no-color.org/) spec)
 
 #### Banner (`banner.rs`)
-- Full pillar banner: decorative columns flanking Templar mark (temple facade) + wide-tracked "T E M P L A R" serif wordmark + binary noise
-- Compact banner fallback for narrow terminals (< 70 cols): Templar mark + wordmark only, no outer pillar frame
+- Full banner: 100×57 Templar Mark ASCII art + wide-tracked "T E M P L A R" serif wordmark + binary noise (wide terminals ≥ 110 cols)
+- Compact banner fallback for narrow terminals (< 110 cols): Templar cross `✠` + wordmark + tagline only
 - First-run onboarding sequence (detected via config file absence)
 - Compact `--version` display with gold-styled version string
 - `banner = false` config / `--no-banner` flag suppression
