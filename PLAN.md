@@ -21,7 +21,7 @@ Development follows **test-driven development (TDD)** throughout — tests are w
 **CLI Framework**: `clap` (derive mode) — consistent with `market-config-cli`
 **NEAR Interaction**: `near-cli-rs` — used as the primary dependency for NEAR contract interaction (view calls, function calls, transaction construction, signing, credential management). The CLI wraps `near-cli-rs` capabilities into Templar-specific ergonomic commands.
 **HTTP Client**: `reqwest` — consistent with existing services
-**Interactive TUI**: `dialoguer` + `console` — consistent with `market-config-cli`
+**Interactive TUI**: `dialoguer` + `console` + `indicatif` — consistent with `market-config-cli`, plus progress bars/spinners
 **Async Runtime**: `tokio`
 **Testing**: `cargo-nextest` runner, `mockall` for trait mocking, `wiremock` for HTTP mocking, `cargo-llvm-cov` for coverage
 **Documentation**: `mdbook` for user guide, `cargo doc` with `#![warn(missing_docs)]` for Rust API docs
@@ -35,6 +35,397 @@ Development follows **test-driven development (TDD)** throughout — tests are w
 3. **Transaction construction**: NEAR transaction building, signing, and submission patterns
 
 Where `near-cli-rs` internals are too coupled to its interactive prompt system, we use its underlying NEAR crates directly (`near-jsonrpc-client`, `near-primitives`, `near-crypto`, `near-token`, `near-gas`). All contract view/call functions from the Templar contracts are wrapped as typed, ergonomic CLI commands.
+
+---
+
+## CLI Theme & Brand Identity — "The Cypherpunk Terminal"
+
+The CLI is an extension of the Templar brand — a **cypherpunk artifact** that feels like a sovereign terminal from which you command your own financial destiny. Every interaction should feel intentional, reverent, and slightly dangerous — like handling cryptographic keys to a Swiss vault. The aesthetic draws directly from the [templarfi.org](https://www.templarfi.org/) website and the protocol's founding ethos: *"Make Bitcoin Cypherpunk Again."*
+
+### Brand Pillars (CLI Translation)
+
+| Web Brand Element | CLI Translation |
+|---|---|
+| "Be Your Own Bank" | Startup banner tagline, `--help` header |
+| "Cypher Lending" | Command group descriptions, about text |
+| "The Spirit of Templar Will Rise Again" | Easter egg on first-run / `templar init` |
+| "No bridging. No centralized custody. No rehypothecation." | Bridge command help text |
+| Medieval Knight ranks (Squire → Templar Marshal) | Interactive prompt flavor text, UA key labels |
+| Binary Matrix (flipping 0/1 grid) | Loading/processing animations |
+| Text Scramble (binary decode effect) | Transaction hash reveals, address displays |
+| Gold gradient borders | Box-drawing frame borders with gold ANSI |
+| Dark theme (near-black bg, ivory text, gold accents) | Default terminal color scheme |
+
+### Color Palette (ANSI Terminal Mapping)
+
+The Templar web palette is mapped to the closest ANSI/256-color and truecolor escape codes. Truecolor (`\x1b[38;2;R;G;Bm`) is preferred with automatic fallback to 256-color for older terminals.
+
+```rust
+pub struct TemplarPalette;
+
+impl TemplarPalette {
+    // Primary brand colors (truecolor)
+    pub const GOLD: Color       = Color::Rgb(213, 170, 81);   // #D5AA51 — primary accent
+    pub const ANTIQUE_GOLD: Color = Color::Rgb(174, 130, 39); // #AE8227 — secondary accent
+    pub const GOLD_MUTED: Color = Color::Rgb(184, 150, 90);   // #B8965A — dimmed gold
+    pub const IVORY: Color      = Color::Rgb(232, 225, 211);  // #E8E1D3 — primary text
+    pub const WARM_GREY: Color  = Color::Rgb(165, 155, 137);  // #A59B89 — muted text, borders
+    pub const DARK_BG: Color    = Color::Rgb(18, 18, 17);     // #121211 — background reference
+    pub const NAVY: Color       = Color::Rgb(19, 23, 50);     // #131732 — logo text color
+
+    // Semantic colors
+    pub const SUCCESS: Color    = Color::Rgb(80, 199, 89);    // #50C759 — confirmations
+    pub const DANGER: Color     = Color::Rgb(224, 53, 53);    // #E03535 — errors, liquidation warnings
+    pub const INFO: Color       = Color::Rgb(20, 153, 182);   // #1499B6 — informational, links
+    pub const CIPHER: Color     = Color::Rgb(150, 60, 220);   // #963CDC — crypto/cipher operations
+
+    // ANSI 256-color fallbacks
+    pub const GOLD_256: Color       = Color::Ansi256(178);  // closest to #D5AA51
+    pub const IVORY_256: Color      = Color::Ansi256(253);  // closest to #E8E1D3
+    pub const WARM_GREY_256: Color  = Color::Ansi256(144);  // closest to #A59B89
+}
+```
+
+**Color usage rules**:
+- **Gold (`#D5AA51`)**: Headers, command names, success indicators, key values (amounts, rates)
+- **Antique Gold (`#AE8227`)**: Secondary headers, borders, separators, progress bars
+- **Ivory (`#E8E1D3`)**: Primary body text, descriptions
+- **Warm Grey (`#A59B89`)**: Dimmed/muted text, labels, timestamps, borders
+- **Cipher Purple (`#963CDC`)**: Cryptographic operations (signing, hashing, encrypting), key IDs
+- **Success Green (`#50C759`)**: Transaction confirmed, operation complete
+- **Danger Red (`#E03535`)**: Errors, liquidation risk, high-risk warnings
+- **Info Teal (`#1499B6`)**: Explorer links, informational callouts
+- `NO_COLOR` env var disables all ANSI codes (per [no-color.org](https://no-color.org/) spec)
+- `--color never|auto|always` flag for explicit control
+
+### ASCII Art & Branded Typography
+
+#### Startup Banner
+
+On first invocation or `templar --version`, display the Templar banner with binary noise aesthetic:
+
+```
+   ╔══════════════════════════════════════════════════════╗
+   ║                                                      ║
+   ║   ▀█▀ █▀▀ █▀▄▀█ █▀█ █   █▀█ █▀█                    ║
+   ║    █  █▀▀ █ ▀ █ █▀▀ █   █▀█ █▀▄                    ║
+   ║    ▀  ▀▀▀ ▀   ▀ ▀   ▀▀▀ ▀ ▀ ▀ ▀                    ║
+   ║                                                      ║
+   ║   Cypher Lending Protocol · CLI v0.1.0               ║
+   ║   Be Your Own Bank                                   ║
+   ║                                                      ║
+   ║   01001101 01100001 01101011 01100101                 ║
+   ║   01000010 01101001 01110100 01100011                 ║
+   ║   01101111 01101001 01101110 00100000                 ║
+   ║   01000011 01111001 01110000 01101000                 ║
+   ║   01100101 01110010 01110000 01110101                 ║
+   ║   01101110 01101011 00100000                          ║
+   ║   01000001 01100111 01100001 01101001 01101110        ║
+   ║                                                      ║
+   ╚══════════════════════════════════════════════════════╝
+```
+
+The binary block encodes "Make Bitcoin Cypherpunk Again" in ASCII binary — a hidden message for those who decode it (documented in the user guide as an easter egg). The banner text uses **Gold** ANSI color; the border uses **Antique Gold**; the binary noise uses **Warm Grey** at reduced intensity.
+
+**Banner display rules**:
+- Shown on `templar` (no subcommand), `templar --version`, `templar init`
+- NOT shown when running commands (e.g., `templar markets list`) — commands go straight to output
+- `--quiet` / `-q` suppresses the banner globally
+- `banner = false` in config disables permanently
+
+#### Templar Cross Motif
+
+A compact Templar cross glyph used as a section divider and bullet marker in verbose output:
+
+```
+  ✠  — Used as section separator in detailed views
+  ┼  — Fallback for non-Unicode terminals
+```
+
+### Box-Drawing & Framing
+
+All table and panel output uses Unicode box-drawing characters styled to evoke the medieval-manuscript / cypherpunk-terminal aesthetic:
+
+#### Panel Frame (for detail views)
+
+```
+ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ ┃  Market: iBTC-USDC                               ┃
+ ┃  Contract: ibtc-usdc.v1.tmplr.near               ┃
+ ┠──────────────────────────────────────────────────┨
+ ┃  Collateral        BTC (NEP-245)                  ┃
+ ┃  Borrow Asset      USDC                           ┃
+ ┃  Utilization       73.2%  ████████░░ ▌            ┃
+ ┃  Borrow APR        4.82%                          ┃
+ ┃  Supply APY        3.51%                          ┃
+ ┠──────────────────────────────────────────────────┨
+ ┃  TVL               $12,847,302                    ┃
+ ┃  Available          $3,441,190                    ┃
+ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+```
+
+- **Header** (market name, contract): Gold
+- **Labels** (left column): Warm Grey
+- **Values** (right column): Ivory
+- **Key metrics** (utilization %, APR, APY): Gold for positive, Red for warnings
+- **Progress bar**: Gold fill (`█`), Warm Grey empty (`░`)
+- **Border**: Antique Gold heavy box-drawing (`┏┓┗┛━┃`)
+- **Divider**: Antique Gold light (`┠──┨`)
+
+#### Table Frame (for list views)
+
+```
+ ┌──────────────────┬──────────┬─────────┬──────────┐
+ │ Market           │ TVL      │ APR     │ Status   │
+ ├──────────────────┼──────────┼─────────┼──────────┤
+ │ iBTC-USDC        │ $12.84M  │  4.82%  │ ● Active │
+ │ iETH-USDC        │  $8.21M  │  3.14%  │ ● Active │
+ │ iSOL-USDC        │  $2.10M  │  5.91%  │ ● Active │
+ │ iXRP-USDC        │  $1.05M  │  6.23%  │ ○ Paused │
+ └──────────────────┴──────────┴─────────┴──────────┘
+```
+
+- **Headers**: Gold, bold
+- **Status indicators**: `●` Green (active), `○` Warm Grey (paused), `◉` Red (frozen)
+- **Border**: Warm Grey single box-drawing (`┌┐└┘─│`)
+- **Separator**: Warm Grey (`├┼┤`)
+
+### Interactive Prompts — Cypherpunk Voice
+
+All interactive prompts (`dialoguer` / `console`) use themed styling and a distinct cypherpunk voice — authoritative, concise, slightly archaic, with cryptographic undertones.
+
+#### Prompt Styling
+
+```rust
+use console::Style;
+use dialoguer::theme::ColorfulTheme;
+
+fn templar_theme() -> ColorfulTheme {
+    ColorfulTheme {
+        prompt_prefix: Style::new().color256(178).apply_to("  ✠".to_string()),
+        prompt_style: Style::new().color256(253),         // Ivory
+        active_item_prefix: Style::new().color256(178).apply_to("▸".to_string()),
+        active_item_style: Style::new().color256(178),    // Gold
+        inactive_item_style: Style::new().color256(144),  // Warm Grey
+        success_prefix: Style::new().color256(83).apply_to("✓".to_string()),
+        error_prefix: Style::new().color256(160).apply_to("✗".to_string()),
+        ..Default::default()
+    }
+}
+```
+
+#### Voice & Copy Examples
+
+**Configuration init** (`templar config init`):
+```
+  ✠ Forging your configuration...
+
+    Network:
+    ▸ Mainnet — The sovereign network
+      Testnet — The proving grounds
+      Custom  — For the initiated
+
+  ✠ Select your keychain:
+    ▸ NEAR Wallet         — ed25519 credentials
+      Solana Keypair       — Ed25519Raw signing
+      EVM Private Key      — secp256k1 (EIP-191)
+      Stellar Secret       — Ed25519 (SEP-53)
+
+  ✓ Configuration forged at ~/.templar/config.toml
+    Your keys. Your protocol. Your bank.
+```
+
+**Signing a transaction**:
+```
+  ✠ Preparing transaction...
+
+    Action     Supply 1.5 USDC to iBTC-USDC market
+    Contract   ibtc-usdc.v1.tmplr.near
+    Gas        30 TGas
+    Deposit    1,500,000 yoctoNEAR
+
+  ✠ Sign this transaction? [y/N]
+
+  ⣾ Sealing transaction...                    ← animated spinner
+  ✓ Transaction sealed.
+    Hash: 4xZ9...kQ3m                         ← revealed via text-scramble effect
+    Explorer: https://nearblocks.io/txns/4xZ9...kQ3m
+```
+
+**Bridge deposit**:
+```
+  ✠ Initiating cross-chain deposit...
+
+    Asset       BTC
+    Amount      0.15 BTC
+    Route       Bitcoin → intents.near (NEP-245)
+    Token ID    nep141:btc.omft.near
+
+  ✠ Generating deposit address...
+  ⣾ Communing with the bridge oracle...       ← animated spinner
+
+  ✓ Deposit address forged:
+    ┌─────────────────────────────────────────────┐
+    │  bc1q...7x4m                                │
+    │  Send exactly 0.15 BTC to this address.     │
+    │  Funds arrive as NEP-245 in ~10 minutes.    │
+    └─────────────────────────────────────────────┘
+
+  ✠ Track status: templar bridge track <deposit-id>
+```
+
+**Error states** (cypherpunk diagnostic voice):
+```
+  ✗ Transaction rejected by the relayer.
+
+    Code     INSUFFICIENT_ALLOWANCE
+    Detail   Gas allowance exhausted for this key.
+             Fund your Universal Account or use --direct signing.
+
+  ✗ RPC unreachable.
+
+    Endpoint   https://rpc.mainnet.fastnear.com
+    Retries    3/3 exhausted (200ms → 400ms → 800ms backoff)
+    Cause      Connection refused
+
+    Try: templar config set near_rpc_url <alternate-rpc>
+```
+
+**High-risk confirmation** (batch operations, large amounts):
+```
+  ⚠ HIGH-RISK OPERATION
+
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃  Withdrawing 10.0 BTC ($432,150.00)       ┃
+    ┃  This exceeds the safety threshold.        ┃
+    ┃                                            ┃
+    ┃  Type "WITHDRAW" to confirm:               ┃
+    ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+```
+
+### Loading & Progress Animations
+
+The CLI mirrors the website's **binary matrix** and **text scramble** effects in terminal form.
+
+#### Binary Spinner
+
+A spinner that cycles through binary noise patterns, matching the `BinaryMatrix` component from the web frontend:
+
+```rust
+const BINARY_SPINNER_FRAMES: &[&str] = &[
+    "⠋ 01001",
+    "⠙ 10110",
+    "⠹ 01101",
+    "⠸ 11010",
+    "⠼ 00101",
+    "⠴ 10011",
+    "⠦ 01110",
+    "⠧ 11001",
+];
+```
+
+Displayed in **Cipher Purple** (`#963CDC`) for cryptographic operations, **Gold** for general loading.
+
+#### Text Scramble Reveal
+
+Transaction hashes, addresses, and key IDs are revealed character-by-character with a binary scramble effect (matching the web `TextScramble` component that uses `["1", "0"]` as scramblers):
+
+```
+  Hash: 0110100101 → 4xZ9...kQ3m     (scramble → reveal over ~500ms)
+```
+
+Implementation: iterate through the output string, replacing each character briefly with random `0`/`1` before settling on the actual value. Speed: 40ms per character, 3 scramble iterations per character.
+
+#### Progress Bars
+
+For multi-step operations (bridge deposits, batch operations):
+
+```
+  ✠ Bridge Deposit Progress
+
+    [1/4] Requesting deposit address    ████████████████████ ✓
+    [2/4] Awaiting on-chain deposit     ████████░░░░░░░░░░░░ 42%
+    [3/4] Confirming on NEAR            ░░░░░░░░░░░░░░░░░░░░ pending
+    [4/4] Crediting to market           ░░░░░░░░░░░░░░░░░░░░ pending
+```
+
+- Completed steps: **Green** fill + checkmark
+- Active step: **Gold** fill + percentage
+- Pending steps: **Warm Grey** empty + "pending"
+
+### First-Run Experience
+
+On the very first invocation (`templar` with no config file present), display a special onboarding sequence:
+
+```
+   ╔══════════════════════════════════════════════════════╗
+   ║                                                      ║
+   ║   ▀█▀ █▀▀ █▀▄▀█ █▀█ █   █▀█ █▀█                    ║
+   ║    █  █▀▀ █ ▀ █ █▀▀ █   █▀█ █▀▄                    ║
+   ║    ▀  ▀▀▀ ▀   ▀ ▀   ▀▀▀ ▀ ▀ ▀ ▀                    ║
+   ║                                                      ║
+   ║   The Spirit of Templar Will Rise Again.             ║
+   ║                                                      ║
+   ╚══════════════════════════════════════════════════════╝
+
+  Welcome, initiate. This terminal is your sovereign interface
+  to the Templar Protocol — cypher lending, without intermediaries.
+
+  To begin, we must forge your configuration.
+
+  ✠ Run `templar config init` to proceed.
+```
+
+### Theme Configuration
+
+Users can configure theme behavior in `~/.templar/config.toml`:
+
+```toml
+[theme]
+banner = true           # Show banner on startup (default: true)
+color = "auto"          # "auto" | "always" | "never" (default: "auto")
+animations = true       # Enable text scramble, binary spinner (default: true)
+unicode = true          # Use Unicode box-drawing; false = ASCII fallback (default: true)
+voice = "cypherpunk"    # "cypherpunk" | "standard" (default: "cypherpunk")
+```
+
+- `voice = "standard"` replaces themed copy with neutral technical language:
+  - "Forging your configuration" → "Creating configuration"
+  - "Sealing transaction" → "Submitting transaction"
+  - "Communing with the bridge oracle" → "Requesting deposit address"
+- `animations = false` disables text scramble and binary spinner (uses static output)
+- `unicode = false` replaces `┏━┓` with `+-+` and `✠` with `*`
+- All theme settings are overridable via CLI flags: `--no-banner`, `--color never`, `--no-animation`
+
+### Theme Module (`src/display/theme.rs`)
+
+```rust
+/// Templar brand theme for terminal output.
+///
+/// Maps the Templar web design system (Gold #D5AA51, Ivory #E8E1D3,
+/// Antique Gold #AE8227, etc.) to ANSI terminal escape codes with
+/// automatic fallback from truecolor → 256-color → basic ANSI.
+pub struct Theme {
+    pub palette: Palette,
+    pub banner_enabled: bool,
+    pub animations_enabled: bool,
+    pub unicode_enabled: bool,
+    pub voice: Voice,
+}
+
+pub enum Voice {
+    /// "Forging your configuration...", "Sealing transaction..."
+    Cypherpunk,
+    /// "Creating configuration...", "Submitting transaction..."
+    Standard,
+}
+```
+
+**Crate dependencies** for themed output:
+- `console` — terminal detection, ANSI styling, term width
+- `indicatif` — progress bars, spinners (with custom binary spinner template)
+- `dialoguer` — interactive prompts (with `ColorfulTheme` customization)
+- `unicode-width` — proper column alignment for CJK/emoji
 
 ---
 
@@ -78,6 +469,7 @@ templar-cli/
 │       │   ├── hot-bridge.md          # Hot Bridge (NEP-245) assets
 │       │   ├── intents-bridge.md      # Intents/Defuse (NEP-141 OMFT) assets
 │       │   └── supported-assets.md    # Full asset table with decimals, contract IDs
+│       ├── theme.md                   # Theme customization: colors, voice, animations, Unicode
 │       ├── architecture.md            # Internal architecture for contributors
 │       └── glossary.md                # Term definitions (aligned with contracts glossary)
 ├── src/
@@ -158,7 +550,11 @@ templar-cli/
 │   │   └── reporter.rs               # Background telemetry reporter
 │   └── display/
 │       ├── mod.rs                     # Output formatting dispatch (json vs table)
-│       ├── table.rs                   # Table rendering for terminal
+│       ├── theme.rs                   # Templar brand theme: palette, voice, unicode/ASCII modes
+│       ├── banner.rs                  # ASCII art banner, first-run experience, version display
+│       ├── spinner.rs                 # Binary spinner, text scramble reveal, progress bars
+│       ├── frame.rs                   # Box-drawing panel/table frames (heavy + light styles)
+│       ├── table.rs                   # Table rendering for terminal (themed)
 │       └── json.rs                    # JSON output mode
 ├── tests/
 │   ├── common/
@@ -179,7 +575,8 @@ templar-cli/
 │   ├── auth_test.rs                   # Key import, signing, auth dispatch
 │   ├── signing_test.rs               # Transaction signing, envelope construction
 │   ├── analytics_test.rs             # Analytics collection and reporting
-│   ├── display_test.rs               # Output formatting (table + JSON)
+│   ├── display_test.rs               # Output formatting (table + JSON), theme rendering
+│   ├── theme_test.rs                 # Brand theme: palette fallback, banner, spinner, frames, voice modes
 │   ├── types_serde_test.rs           # Serialization round-trips for vendored types
 │   └── cli_integration_test.rs       # End-to-end CLI invocations via assert_cmd
 └── README.md
@@ -292,6 +689,8 @@ Located in `docs/`, built via `mdbook build docs/`, deployed alongside rustdoc.
 - Every command documented with: synopsis, description, arguments/flags, examples, related commands
 - Cross-links to rustdoc for type details: `[MarketConfiguration](/doc/templar_cli/types/market/struct.MarketConfiguration.html)`
 - Shell examples showing both interactive and non-interactive (scripting) usage
+- **Theme customization page**: color settings, voice modes (`cypherpunk` vs `standard`), animation toggle, Unicode/ASCII fallback, `NO_COLOR` support, banner configuration
+- **Easter eggs page**: binary banner decode explanation, Templar cross motif history
 - Glossary aligned with `contracts/docs/src/glossary.md`
 
 ### 3. Documentation Build Commands
@@ -311,7 +710,7 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 
 ## Phase 1: Foundation & Scaffolding
 
-**Goal**: Project setup, config system, output formatting, test infrastructure — the skeleton everything else builds on. All code written TDD-first.
+**Goal**: Project setup, config system, **Templar-branded themed output** (palette, banner, spinners, frames, cypherpunk voice), test infrastructure — the skeleton everything else builds on. All code written TDD-first.
 
 ### 1.1 Project Initialization
 - Initialize Cargo project with `[lib]` + `[[bin]]` targets
@@ -388,17 +787,63 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
     - `--strict-permissions` flag rejects overly permissive files
     - Config load with `$TEMPLAR_CONFIG` pointing to world-readable file emits warning
 
-### 1.4 Output Formatting (`src/display/`)
+### 1.4 Output Formatting & Theme (`src/display/`)
+
+#### Theme System (`theme.rs`)
+- `Theme` struct loading from config `[theme]` section with CLI flag overrides
+- `Palette` with Templar brand colors (Gold `#D5AA51`, Antique Gold `#AE8227`, Ivory `#E8E1D3`, Warm Grey `#A59B89`, Cipher Purple `#963CDC`, etc.)
+- Terminal capability detection: truecolor → 256-color → basic ANSI → no color (automatic fallback chain)
+- `Voice` enum: `Cypherpunk` (themed copy) / `Standard` (neutral copy) with message lookup table
+- `--color auto|always|never`, `--no-animation`, `--no-banner` global flags
+- `NO_COLOR` env var support (per [no-color.org](https://no-color.org/) spec)
+
+#### Banner (`banner.rs`)
+- ASCII art "TEMPLAR" wordmark with binary noise footer encoding "Make Bitcoin Cypherpunk Again"
+- First-run onboarding sequence (detected via config file absence)
+- Compact `--version` display with gold-styled version string
+- `banner = false` config / `--no-banner` flag suppression
+
+#### Spinner & Animations (`spinner.rs`)
+- Custom `indicatif` spinner template with binary noise frames (`01001`, `10110`, ...)
+- Text scramble reveal for hashes and addresses (binary `0`/`1` → final character, 40ms/char)
+- Multi-step progress bars with Gold fill / Warm Grey empty / Green completion
+- `animations = false` config / `--no-animation` flag disables all animated output (static fallback)
+
+#### Box-Drawing Frames (`frame.rs`)
+- Heavy frame (`┏━┓┗━┛┃`) in Antique Gold for detail/panel views
+- Light frame (`┌─┐└─┘│`) in Warm Grey for table/list views
+- Section divider with Templar cross motif (`✠`)
+- `unicode = false` config falls back to ASCII (`+-+|` and `*`)
+
+#### Output Formatting
 - `OutputFormat` enum: `Table`, `Json`
 - `--output json` global flag
-- Table renderer using formatted terminal output
-- JSON renderer using `serde_json::to_string_pretty`
-- `NO_COLOR` env var support
+- Table renderer using themed frames, Gold headers, Ivory values, Warm Grey labels
+- JSON renderer using `serde_json::to_string_pretty` (unthemed — machine-readable)
+- Status indicators: `●` Green (active), `○` Warm Grey (paused), `◉` Red (frozen)
+
+#### Interactive Prompts (themed `dialoguer`)
+- Custom `ColorfulTheme` with Templar cross (`✠`) prompt prefix in Gold
+- Active item prefix `▸` in Gold, inactive items in Warm Grey
+- Success `✓` in Green, error `✗` in Red
+- Cypherpunk voice for prompt labels ("Forging your configuration...", "Select your keychain:")
+
 - **Tests** (written first):
   - JSON mode produces valid JSON for all output types
   - Table mode respects terminal width
-  - `NO_COLOR` disables ANSI codes
+  - `NO_COLOR` disables all ANSI codes
+  - `--color never` disables all ANSI codes
   - Snapshot tests (via `insta`) for formatted output of each data type
+  - Theme loads from config with correct defaults
+  - Color fallback chain: truecolor → 256 → basic (tested via mock terminal caps)
+  - Banner renders correctly and respects `--no-banner` / config suppression
+  - First-run detection triggers onboarding banner
+  - Voice enum switches between cypherpunk and standard copy
+  - Unicode fallback produces valid ASCII-only output
+  - Spinner frames cycle correctly
+  - Text scramble produces correct final output after animation
+  - Box-drawing frames render at correct widths
+  - Status indicators use correct symbols and colors
 
 ### 1.5 Vendored Types (`src/types/`)
 - Mirror key types from `templar-common` with matching serde serialization:
@@ -424,18 +869,27 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 ### 1.6 Commands Skeleton (`src/commands/`)
 - Top-level `Commands` enum with all subcommands registered
 - Each command module stubbed with argument parsing + `todo!()` handler
-- `templar config init` and `templar config show` fully implemented
+- `templar config init` and `templar config show` fully implemented (with themed interactive prompts)
 - `templar health` implemented (simple HTTP GET)
+- Root `templar` (no subcommand) shows banner + help
+- First-run detection: if no `~/.templar/config.toml` exists, show onboarding banner and suggest `templar config init`
+- Clap `about` and `long_about` strings use brand voice: "Cypher Lending Protocol CLI — Be Your Own Bank"
+- `--quiet` / `-q` global flag suppresses banner and non-essential output
 - **Tests**:
   - CLI parses all subcommands correctly (`clap` arg validation)
-  - `config init` creates valid config file
-  - `config show` outputs current profile
+  - `config init` creates valid config file with themed prompts
+  - `config show` outputs current profile in themed panel frame
   - `health` returns appropriate output for 200/500/unreachable
+  - Root command (no args) displays banner
+  - `--quiet` suppresses banner
+  - First-run detection works when config absent
 
 ### 1.7 Documentation (Phase 1)
 - mdbook skeleton with SUMMARY.md, index.md, installation.md, configuration.md, quickstart.md
-- Rustdoc for all Phase 1 modules (error, config, display, types)
-- README.md with install instructions, quick start, and link to docs
+- **Theme customization page** in mdbook: color settings, voice modes, animation toggle, Unicode/ASCII fallback, `NO_COLOR` support
+- **Easter egg documentation**: binary banner decode, Templar cross motif meaning
+- Rustdoc for all Phase 1 modules (error, config, display, types, theme)
+- README.md with install instructions, quick start, link to docs, and branded banner screenshot
 
 ---
 
@@ -1018,12 +1472,15 @@ templar bridge recent-deposits [--chain <chain>]         # List recent deposits
 templar bridge estimate-fee <asset> <destination-address> [--chain <chain>]  # Withdrawal fee estimate
 ```
 
-### 4.8 Transaction Confirmation
-- Show transaction summary before signing (method, contract, amounts, gas, auth method)
-- For bridge operations: show bridge route, fees, estimated time
+### 4.8 Transaction Confirmation (Themed)
+- Show transaction summary in a heavy-frame panel before signing (method, contract, amounts, gas, auth method)
+- For bridge operations: show bridge route, fees, estimated time in panel
+- Cypherpunk voice: "Sealing transaction...", "Transaction sealed." / Standard voice: "Submitting...", "Confirmed."
 - `--yes` / `-y` flag to skip confirmation
-- Display tx hash on success
-- `templar tx status <tx-hash>` — query result
+- On success: display tx hash via text-scramble reveal (binary → final hash) with explorer link
+- On error: display error in danger-colored panel with diagnostic advice
+- High-risk operations (large amounts, collateral withdrawal) show `⚠ HIGH-RISK OPERATION` panel with type-to-confirm
+- `templar tx status <tx-hash>` — query result with themed status display
 
 ### 4.9 Documentation (Phase 4)
 - mdbook `commands/bridge.md` — full bridge command reference
@@ -1263,7 +1720,7 @@ templar batch --max-ops 500 <file.json>                # Custom operation limit
 
 | Phase | Deliverables | Dependencies | Test Focus |
 |-------|-------------|-------------|------------|
-| **1: Foundation** | Project scaffold, config, display, vendored types, test infra | None | Config parsing, type serde, display formatting |
+| **1: Foundation** | Project scaffold, config, themed display (palette, banner, spinners, frames), vendored types, test infra | None | Config parsing, type serde, display formatting, theme rendering |
 | **2: NEAR Contracts** | All Templar contract wrappers, NEAR signing, backend/Pyth clients | Phase 1 + NEAR crates | Mock RPC, contract call construction, CLI E2E |
 | **3: Multichain Auth** | Key import/encrypt for 4 chains, auth dispatch, UA lookup | Phase 2 + crypto crates | Key round-trips, signing verification, dispatch |
 | **4: UA Relay + Bridging** | Sign-and-relay, PoW, Hot Bridge + Intents Bridge, all cross-chain ops | Phase 3 + relayer + bridge APIs | Full relay flow, intent signing, bridge mocks |
@@ -1275,12 +1732,12 @@ templar batch --max-ops 500 <file.json>                # Custom operation limit
 
 | Phase | Source Files | Lines (approx) | Test Files | Test Lines (approx) |
 |-------|-------------|----------------|------------|---------------------|
-| 1: Foundation | ~12 | ~1,800 | ~5 | ~1,200 |
+| 1: Foundation | ~16 | ~2,600 | ~6 | ~1,800 |
 | 2: NEAR Contracts | ~15 | ~3,500 | ~8 | ~3,000 |
 | 3: Multichain Auth | ~8 | ~1,500 | ~3 | ~1,200 |
 | 4: UA Relay + Bridging | ~12 | ~3,500 | ~7 | ~3,000 |
 | 5: Analytics + Advanced | ~8 | ~2,000 | ~4 | ~1,500 |
 
-**Total**: ~55 source files, ~12,300 lines of implementation + ~27 test files, ~9,900 lines of tests + mdbook guide (~25 pages) + comprehensive rustdoc
+**Total**: ~59 source files, ~13,100 lines of implementation + ~28 test files, ~10,500 lines of tests + mdbook guide (~27 pages) + comprehensive rustdoc
 
 **Coverage target**: 95%+ enforced in CI via `cargo-llvm-cov`
