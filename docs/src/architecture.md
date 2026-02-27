@@ -1,3 +1,3 @@
-# architecture
+# Architecture
 
 Documentation for this section is under development.
