@@ -1,0 +1,80 @@
+[package]
+name = "templar-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Templar Protocol CLI — Cypher Lending, Be Your Own Bank"
+license = "MIT"
+repository = "https://github.com/Templar-Protocol/templar-cli"
+
+[lib]
+name = "templar_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "templar"
+path = "src/main.rs"
+
+[dependencies]
+# CLI framework
+clap = { version = "4", features = ["derive", "env", "wrap_help"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+
+# NEAR interaction
+near-jsonrpc-client = "0.14"
+near-jsonrpc-primitives = "0.27"
+near-primitives = "0.27"
+near-crypto = "0.27"
+near-token = "0.3"
+near-gas = "0.3"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Interactive TUI / Display
+console = "0.15"
+dialoguer = "0.11"
+indicatif = "0.17"
+unicode-width = "0.2"
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Crypto / Security
+base64 = "0.22"
+hex = "0.4"
+bs58 = "0.5"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Misc
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "6"
+rand = "0.9"
+url = { version = "2", features = ["serde"] }
+borsh = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+wiremock = "0.6"
+mockall = "0.13"
+tempfile = "3"
+tokio-test = "0.4"
+insta = { version = "1", features = ["json", "yaml"] }
+pretty_assertions = "1"
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1

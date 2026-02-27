@@ -1,0 +1,9 @@
+[book]
+title = "Templar CLI User Guide"
+authors = ["Templar Protocol"]
+description = "User guide for the Templar Protocol command-line interface"
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
