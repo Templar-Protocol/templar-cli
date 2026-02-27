@@ -48,7 +48,7 @@ The CLI is an extension of the Templar brand — a **cypherpunk artifact** that 
 |---|---|
 | "Be Your Own Bank" | Startup banner tagline, `--help` header |
 | "Cypher Lending" | Command group descriptions, about text |
-| "The Spirit of Templar Will Rise Again" | Easter egg on first-run / `templar init` |
+| "The First Cypher Lending Protocol" | Startup banner subtitle, first-run greeting |
 | "No bridging. No centralized custody. No rehypothecation." | Bridge command help text |
 | Medieval Knight ranks (Squire → Templar Marshal) | Interactive prompt flavor text, UA key labels |
 | Binary Matrix (flipping 0/1 grid) | Loading/processing animations |
@@ -100,47 +100,131 @@ impl TemplarPalette {
 
 ### ASCII Art & Branded Typography
 
+#### The Templar Mark (ASCII)
+
+The Templar logo (`LogoNew` in the web frontend at `components/icons/logo-new.tsx`) is a **stylized temple facade** that doubles as the letter **T** — two outer pillar columns flanking a narrow central column, connected by an entablature across the top, with the central column tapering to a downward-pointing chevron. The SVG depicts: left pillar (wide, flared base), right pillar (mirror), central narrow shaft ending in a `▽` point at vertex `(106, 214)`, and a top beam with curved ends. It is rendered as ASCII art in three sizes:
+
+**Full mark** (banner centerpiece, 11 lines):
+
+```
+         ╶━━━━━━━━━━━━━━━━━╸
+        ╱                    ╲
+       ┃  ┃              ┃  ┃
+       ┃  ┃      ║       ┃  ┃
+       ┃  ┃      ║       ┃  ┃
+       ┃  ┃      ║       ┃  ┃
+       ┃   ╲     ║      ╱   ┃
+            ╲   ╱ ╲   ╱
+              ╲╱   ╲╱
+                ▽
+```
+
+The two outer columns widen at the base (matching the SVG's flared pillar bases). The central shaft narrows to a point (matching the SVG's chevron vertex). The entablature curves at its ends (matching the SVG's pediment sweep). All rendered in **Gold** with **Antique Gold** accents.
+
+**Compact mark** (for headers, 7 lines):
+
+```
+      ━━━━━━━━━━━
+     ┃  ┃  ║  ┃  ┃
+     ┃  ┃  ║  ┃  ┃
+     ┃  ┃  ║  ┃  ┃
+     ┃  ╲  ║  ╱  ┃
+         ╲╱╲╱
+           ▽
+```
+
+**Inline glyph** (for prompt prefix, single-line):
+```
+ ╤║╤    — Temple mark (Gold), used as prompt prefix: "╤║╤ Forging your configuration..."
+```
+
 #### Startup Banner
 
-On first invocation or `templar --version`, display the Templar banner with binary noise aesthetic:
+On first invocation or `templar --version`, display the full Templar banner. The design integrates the actual Templar mark (temple facade from `LogoNew`) with flanking decorative pillars inspired by the `templar-bank-graphic.png` ruined temple illustration on the homepage. The "TEMPLAR" wordmark uses **wide letter-spacing** matching the `LogoNewFull` serif wordmark (PP Fragment Glare aesthetic — all caps, generous tracking):
 
 ```
-   ╔══════════════════════════════════════════════════════╗
-   ║                                                      ║
-   ║   ▀█▀ █▀▀ █▀▄▀█ █▀█ █   █▀█ █▀█                    ║
-   ║    █  █▀▀ █ ▀ █ █▀▀ █   █▀█ █▀▄                    ║
-   ║    ▀  ▀▀▀ ▀   ▀ ▀   ▀▀▀ ▀ ▀ ▀ ▀                    ║
-   ║                                                      ║
-   ║   Cypher Lending Protocol · CLI v0.1.0               ║
-   ║   Be Your Own Bank                                   ║
-   ║                                                      ║
-   ║   01001101 01100001 01101011 01100101                 ║
-   ║   01000010 01101001 01110100 01100011                 ║
-   ║   01101111 01101001 01101110 00100000                 ║
-   ║   01000011 01111001 01110000 01101000                 ║
-   ║   01100101 01110010 01110000 01110101                 ║
-   ║   01101110 01101011 00100000                          ║
-   ║   01000001 01100111 01100001 01101001 01101110        ║
-   ║                                                      ║
-   ╚══════════════════════════════════════════════════════╝
+  ╓─╖                                                               ╓─╖
+  ║╿║  01101                                                10010   ║╿║
+  ╠═╣                                                               ╠═╣
+  ║│║               ╶━━━━━━━━━━━━━━━━━╸                             ║│║
+  ║│║              ╱                    ╲                            ║│║
+  ║│║             ┃  ┃              ┃  ┃                             ║│║
+  ║│║             ┃  ┃      ║       ┃  ┃                             ║│║
+  ║│║             ┃  ┃      ║       ┃  ┃                             ║│║
+  ║│║             ┃   ╲     ║      ╱   ┃                             ║│║
+  ║│║                  ╲   ╱ ╲   ╱                                   ║│║
+  ║│║                    ╲╱   ╲╱                                     ║│║
+  ║│║                      ▽                                         ║│║
+  ║│║                                                                ║│║
+  ║│║       T  E  M  P  L  A  R                                     ║│║
+  ║│║                                                                ║│║
+  ║│║       The First Cypher Lending Protocol                        ║│║
+  ║│║       Be Your Own Bank · v0.1.0                                ║│║
+  ║│║                                                                ║│║
+  ║│║       01001101 01100001 01101011 01100101                      ║│║
+  ║│║       01000010 01101001 01110100 01100011                      ║│║
+  ║│║       01101111 01101001 01101110 00100000                      ║│║
+  ║│║       01000011 01111001 01110000 01101000                      ║│║
+  ║│║       01100101 01110010 01110000 01110101                      ║│║
+  ║│║       01101110 01101011 00100000                               ║│║
+  ║│║       01000001 01100111 01100001 01101001 01101110             ║│║
+  ║│║                                                                ║│║
+  ╨┴╨━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╨┴╨
 ```
 
-The binary block encodes "Make Bitcoin Cypherpunk Again" in ASCII binary — a hidden message for those who decode it (documented in the user guide as an easter egg). The banner text uses **Gold** ANSI color; the border uses **Antique Gold**; the binary noise uses **Warm Grey** at reduced intensity.
+**Design breakdown**:
+- **Decorative pillar columns** (`╓─╖ ║╿║ ╠═╣ ║│║ ╨┴╨`): Left and right framing columns inspired by the ruined Greco-Roman temple columns in the `templar-bank-graphic.png` homepage illustration. The `╠═╣` represents the ornate Corinthian capital, `║│║` the fluted shaft, `╨┴╨` the base. Rendered in **Antique Gold**.
+- **Templar mark** (center): The full temple-facade logo from `LogoNew` — two outer pillars (`┃  ┃`), central column (`║`), entablature (`╶━━━╸`) with curved ends, pillar bases flaring outward (`╲` / `╱`), converging to the central chevron point (`▽`). Rendered in **Gold**.
+- **"T  E  M  P  L  A  R" wordmark**: Wide letter-spacing (double-space between letters) matching the `LogoNewFull` serif letterforms. Rendered in **Gold**.
+- **Tagline**: "The First Cypher Lending Protocol" in **Ivory**, "Be Your Own Bank · v0.1.0" in **Warm Grey**.
+- **Binary noise block**: Encodes "Make Bitcoin Cypherpunk Again" in ASCII binary — a hidden easter egg for those who decode it (documented in the user guide). Rendered in **Warm Grey** at reduced intensity.
+- **Animated binary headers** (`01101`, `10010`): The binary snippets flanking the pillar capitals cycle randomly on each render, echoing the web `BinaryMatrix` component.
+- **Temple floor**: `━━━` continuous base connecting both pillar bases.
+
+**Compact banner** (for narrow terminals < 70 cols):
+
+```
+       ━━━━━━━━━━━
+      ┃  ┃  ║  ┃  ┃
+      ┃  ┃  ║  ┃  ┃
+      ┃  ┃  ║  ┃  ┃
+      ┃  ╲  ║  ╱  ┃
+          ╲╱╲╱
+            ▽
+
+  T  E  M  P  L  A  R
+  The First Cypher Lending Protocol
+  Be Your Own Bank · v0.1.0
+```
+
+Uses the compact mark (no outer pillar frame) when terminal width is < 70 columns. Detected via `console::Term::stdout().size()`.
 
 **Banner display rules**:
 - Shown on `templar` (no subcommand), `templar --version`, `templar init`
 - NOT shown when running commands (e.g., `templar markets list`) — commands go straight to output
 - `--quiet` / `-q` suppresses the banner globally
 - `banner = false` in config disables permanently
+- Auto-selects compact vs full based on terminal width
 
-#### Templar Cross Motif
+#### Prompt & Divider Glyphs
 
-A compact Templar cross glyph used as a section divider and bullet marker in verbose output:
+The inline temple glyph (`╤║╤`) and the Templar cross (`✠`) are used as markers throughout CLI output:
 
 ```
-  ✠  — Used as section separator in detailed views
-  ┼  — Fallback for non-Unicode terminals
+  ╤║╤  — Primary prompt prefix for interactive prompts and action headers (Gold)
+  ✠    — Section separator in detailed views and verbose output (Antique Gold)
+  ┼    — Fallback for non-Unicode terminals (both glyphs)
 ```
+
+#### Pillar Dividers
+
+For long output (e.g., `templar markets list` with many results), section breaks use a mini-pillar divider:
+
+```
+  ║│║ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ║│║
+```
+
+Rendered in **Warm Grey**, evokes the temple colonnade framing the content.
 
 ### Box-Drawing & Framing
 
@@ -202,7 +286,7 @@ use dialoguer::theme::ColorfulTheme;
 
 fn templar_theme() -> ColorfulTheme {
     ColorfulTheme {
-        prompt_prefix: Style::new().color256(178).apply_to("  ✠".to_string()),
+        prompt_prefix: Style::new().color256(178).apply_to("╤║╤".to_string()),
         prompt_style: Style::new().color256(253),         // Ivory
         active_item_prefix: Style::new().color256(178).apply_to("▸".to_string()),
         active_item_style: Style::new().color256(178),    // Gold
@@ -218,14 +302,14 @@ fn templar_theme() -> ColorfulTheme {
 
 **Configuration init** (`templar config init`):
 ```
-  ✠ Forging your configuration...
+  ╤║╤ Forging your configuration...
 
     Network:
     ▸ Mainnet — The sovereign network
       Testnet — The proving grounds
       Custom  — For the initiated
 
-  ✠ Select your keychain:
+  ╤║╤ Select your keychain:
     ▸ NEAR Wallet         — ed25519 credentials
       Solana Keypair       — Ed25519Raw signing
       EVM Private Key      — secp256k1 (EIP-191)
@@ -237,14 +321,14 @@ fn templar_theme() -> ColorfulTheme {
 
 **Signing a transaction**:
 ```
-  ✠ Preparing transaction...
+  ╤║╤ Preparing transaction...
 
     Action     Supply 1.5 USDC to iBTC-USDC market
     Contract   ibtc-usdc.v1.tmplr.near
     Gas        30 TGas
     Deposit    1,500,000 yoctoNEAR
 
-  ✠ Sign this transaction? [y/N]
+  ╤║╤ Sign this transaction? [y/N]
 
   ⣾ Sealing transaction...                    ← animated spinner
   ✓ Transaction sealed.
@@ -254,14 +338,14 @@ fn templar_theme() -> ColorfulTheme {
 
 **Bridge deposit**:
 ```
-  ✠ Initiating cross-chain deposit...
+  ╤║╤ Initiating cross-chain deposit...
 
     Asset       BTC
     Amount      0.15 BTC
     Route       Bitcoin → intents.near (NEP-245)
     Token ID    nep141:btc.omft.near
 
-  ✠ Generating deposit address...
+  ╤║╤ Generating deposit address...
   ⣾ Communing with the bridge oracle...       ← animated spinner
 
   ✓ Deposit address forged:
@@ -271,7 +355,7 @@ fn templar_theme() -> ColorfulTheme {
     │  Funds arrive as NEP-245 in ~10 minutes.    │
     └─────────────────────────────────────────────┘
 
-  ✠ Track status: templar bridge track <deposit-id>
+  ╤║╤ Track status: templar bridge track <deposit-id>
 ```
 
 **Error states** (cypherpunk diagnostic voice):
@@ -341,7 +425,7 @@ Implementation: iterate through the output string, replacing each character brie
 For multi-step operations (bridge deposits, batch operations):
 
 ```
-  ✠ Bridge Deposit Progress
+  ╤║╤ Bridge Deposit Progress
 
     [1/4] Requesting deposit address    ████████████████████ ✓
     [2/4] Awaiting on-chain deposit     ████████░░░░░░░░░░░░ 42%
@@ -355,26 +439,22 @@ For multi-step operations (bridge deposits, batch operations):
 
 ### First-Run Experience
 
-On the very first invocation (`templar` with no config file present), display a special onboarding sequence:
+On the very first invocation (`templar` with no config file present), display the full pillar banner followed by a special onboarding sequence:
 
 ```
-   ╔══════════════════════════════════════════════════════╗
-   ║                                                      ║
-   ║   ▀█▀ █▀▀ █▀▄▀█ █▀█ █   █▀█ █▀█                    ║
-   ║    █  █▀▀ █ ▀ █ █▀▀ █   █▀█ █▀▄                    ║
-   ║    ▀  ▀▀▀ ▀   ▀ ▀   ▀▀▀ ▀ ▀ ▀ ▀                    ║
-   ║                                                      ║
-   ║   The Spirit of Templar Will Rise Again.             ║
-   ║                                                      ║
-   ╚══════════════════════════════════════════════════════╝
+  [Full pillar banner with Templar mark and wordmark — see Startup Banner above]
 
   Welcome, initiate. This terminal is your sovereign interface
   to the Templar Protocol — cypher lending, without intermediaries.
 
+  No bridging. No centralized custody. No rehypothecation.
+
   To begin, we must forge your configuration.
 
-  ✠ Run `templar config init` to proceed.
+  ╤║╤ Run `templar config init` to proceed.
 ```
+
+The onboarding text uses **Ivory** for the main message, **Gold** for the protocol principles line, and **Warm Grey** for the `config init` instruction.
 
 ### Theme Configuration
 
@@ -394,7 +474,7 @@ voice = "cypherpunk"    # "cypherpunk" | "standard" (default: "cypherpunk")
   - "Sealing transaction" → "Submitting transaction"
   - "Communing with the bridge oracle" → "Requesting deposit address"
 - `animations = false` disables text scramble and binary spinner (uses static output)
-- `unicode = false` replaces `┏━┓` with `+-+` and `✠` with `*`
+- `unicode = false` replaces `┏━┓` with `+-+`, `╤║╤` with `*T*`, and `✠` with `*`
 - All theme settings are overridable via CLI flags: `--no-banner`, `--color never`, `--no-animation`
 
 ### Theme Module (`src/display/theme.rs`)
@@ -551,7 +631,9 @@ templar-cli/
 │   └── display/
 │       ├── mod.rs                     # Output formatting dispatch (json vs table)
 │       ├── theme.rs                   # Templar brand theme: palette, voice, unicode/ASCII modes
-│       ├── banner.rs                  # ASCII art banner, first-run experience, version display
+│       ├── banner.rs                  # Pillar banner, Templar mark, first-run, version display
+│       ├── logo.rs                    # Templar mark ASCII art (full + compact + inline variants)
+│       ├── pillars.rs                 # Corinthian pillar frames, pillar dividers
 │       ├── spinner.rs                 # Binary spinner, text scramble reveal, progress bars
 │       ├── frame.rs                   # Box-drawing panel/table frames (heavy + light styles)
 │       ├── table.rs                   # Table rendering for terminal (themed)
@@ -798,10 +880,12 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 - `NO_COLOR` env var support (per [no-color.org](https://no-color.org/) spec)
 
 #### Banner (`banner.rs`)
-- ASCII art "TEMPLAR" wordmark with binary noise footer encoding "Make Bitcoin Cypherpunk Again"
+- Full pillar banner: decorative columns flanking Templar mark (temple facade) + wide-tracked "T E M P L A R" serif wordmark + binary noise
+- Compact banner fallback for narrow terminals (< 70 cols): Templar mark + wordmark only, no outer pillar frame
 - First-run onboarding sequence (detected via config file absence)
 - Compact `--version` display with gold-styled version string
 - `banner = false` config / `--no-banner` flag suppression
+- Terminal width detection for auto-selecting full vs compact layout
 
 #### Spinner & Animations (`spinner.rs`)
 - Custom `indicatif` spinner template with binary noise frames (`01001`, `10110`, ...)
@@ -812,7 +896,7 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 #### Box-Drawing Frames (`frame.rs`)
 - Heavy frame (`┏━┓┗━┛┃`) in Antique Gold for detail/panel views
 - Light frame (`┌─┐└─┘│`) in Warm Grey for table/list views
-- Section divider with Templar cross motif (`✠`)
+- Section divider with Templar cross motif (`✠`) and pillar divider (`║│║ ━━━ ║│║`)
 - `unicode = false` config falls back to ASCII (`+-+|` and `*`)
 
 #### Output Formatting
@@ -823,7 +907,7 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 - Status indicators: `●` Green (active), `○` Warm Grey (paused), `◉` Red (frozen)
 
 #### Interactive Prompts (themed `dialoguer`)
-- Custom `ColorfulTheme` with Templar cross (`✠`) prompt prefix in Gold
+- Custom `ColorfulTheme` with temple mark (`╤║╤`) prompt prefix in Gold
 - Active item prefix `▸` in Gold, inactive items in Warm Grey
 - Success `✓` in Green, error `✗` in Red
 - Cypherpunk voice for prompt labels ("Forging your configuration...", "Select your keychain:")
@@ -1732,12 +1816,12 @@ templar batch --max-ops 500 <file.json>                # Custom operation limit
 
 | Phase | Source Files | Lines (approx) | Test Files | Test Lines (approx) |
 |-------|-------------|----------------|------------|---------------------|
-| 1: Foundation | ~16 | ~2,600 | ~6 | ~1,800 |
+| 1: Foundation | ~18 | ~2,900 | ~7 | ~2,000 |
 | 2: NEAR Contracts | ~15 | ~3,500 | ~8 | ~3,000 |
 | 3: Multichain Auth | ~8 | ~1,500 | ~3 | ~1,200 |
 | 4: UA Relay + Bridging | ~12 | ~3,500 | ~7 | ~3,000 |
 | 5: Analytics + Advanced | ~8 | ~2,000 | ~4 | ~1,500 |
 
-**Total**: ~59 source files, ~13,100 lines of implementation + ~28 test files, ~10,500 lines of tests + mdbook guide (~27 pages) + comprehensive rustdoc
+**Total**: ~61 source files, ~13,400 lines of implementation + ~28 test files, ~10,700 lines of tests + mdbook guide (~27 pages) + comprehensive rustdoc
 
 **Coverage target**: 95%+ enforced in CI via `cargo-llvm-cov`
