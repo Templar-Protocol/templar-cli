@@ -133,9 +133,9 @@ The two outer columns widen at the base (matching the SVG's flared pillar bases)
            ▽
 ```
 
-**Inline glyph** (for prompt prefix, single-line):
+**Inline glyph** (complementary brand mark, single-line):
 ```
- ╤║╤    — Temple mark (Gold), used as prompt prefix: "╤║╤ Forging your configuration..."
+ ╤║╤    — Temple mark (Gold), used in banner headers, version display, and pillar frame accents
 ```
 
 #### Startup Banner
@@ -211,8 +211,8 @@ Uses the compact mark (no outer pillar frame) when terminal width is < 70 column
 The inline temple glyph (`╤║╤`) and the Templar cross (`✠`) are used as markers throughout CLI output:
 
 ```
-  ╤║╤  — Primary prompt prefix for interactive prompts and action headers (Gold)
-  ✠    — Section separator in detailed views and verbose output (Antique Gold)
+  ✠    — Primary prompt prefix, action headers, section separators (Gold)
+  ╤║╤  — Complementary brand mark for banner header, version display, pillar frames (Gold)
   ┼    — Fallback for non-Unicode terminals (both glyphs)
 ```
 
@@ -286,7 +286,7 @@ use dialoguer::theme::ColorfulTheme;
 
 fn templar_theme() -> ColorfulTheme {
     ColorfulTheme {
-        prompt_prefix: Style::new().color256(178).apply_to("╤║╤".to_string()),
+        prompt_prefix: Style::new().color256(178).apply_to("  ✠".to_string()),
         prompt_style: Style::new().color256(253),         // Ivory
         active_item_prefix: Style::new().color256(178).apply_to("▸".to_string()),
         active_item_style: Style::new().color256(178),    // Gold
@@ -302,14 +302,14 @@ fn templar_theme() -> ColorfulTheme {
 
 **Configuration init** (`templar config init`):
 ```
-  ╤║╤ Forging your configuration...
+  ✠ Forging your configuration...
 
     Network:
     ▸ Mainnet — The sovereign network
       Testnet — The proving grounds
       Custom  — For the initiated
 
-  ╤║╤ Select your keychain:
+  ✠ Select your keychain:
     ▸ NEAR Wallet         — ed25519 credentials
       Solana Keypair       — Ed25519Raw signing
       EVM Private Key      — secp256k1 (EIP-191)
@@ -321,14 +321,14 @@ fn templar_theme() -> ColorfulTheme {
 
 **Signing a transaction**:
 ```
-  ╤║╤ Preparing transaction...
+  ✠ Preparing transaction...
 
     Action     Supply 1.5 USDC to iBTC-USDC market
     Contract   ibtc-usdc.v1.tmplr.near
     Gas        30 TGas
     Deposit    1,500,000 yoctoNEAR
 
-  ╤║╤ Sign this transaction? [y/N]
+  ✠ Sign this transaction? [y/N]
 
   ⣾ Sealing transaction...                    ← animated spinner
   ✓ Transaction sealed.
@@ -338,14 +338,14 @@ fn templar_theme() -> ColorfulTheme {
 
 **Bridge deposit**:
 ```
-  ╤║╤ Initiating cross-chain deposit...
+  ✠ Initiating cross-chain deposit...
 
     Asset       BTC
     Amount      0.15 BTC
     Route       Bitcoin → intents.near (NEP-245)
     Token ID    nep141:btc.omft.near
 
-  ╤║╤ Generating deposit address...
+  ✠ Generating deposit address...
   ⣾ Communing with the bridge oracle...       ← animated spinner
 
   ✓ Deposit address forged:
@@ -355,7 +355,7 @@ fn templar_theme() -> ColorfulTheme {
     │  Funds arrive as NEP-245 in ~10 minutes.    │
     └─────────────────────────────────────────────┘
 
-  ╤║╤ Track status: templar bridge track <deposit-id>
+  ✠ Track status: templar bridge track <deposit-id>
 ```
 
 **Error states** (cypherpunk diagnostic voice):
@@ -425,7 +425,7 @@ Implementation: iterate through the output string, replacing each character brie
 For multi-step operations (bridge deposits, batch operations):
 
 ```
-  ╤║╤ Bridge Deposit Progress
+  ✠ Bridge Deposit Progress
 
     [1/4] Requesting deposit address    ████████████████████ ✓
     [2/4] Awaiting on-chain deposit     ████████░░░░░░░░░░░░ 42%
@@ -451,7 +451,7 @@ On the very first invocation (`templar` with no config file present), display th
 
   To begin, we must forge your configuration.
 
-  ╤║╤ Run `templar config init` to proceed.
+  ✠ Run `templar config init` to proceed.
 ```
 
 The onboarding text uses **Ivory** for the main message, **Gold** for the protocol principles line, and **Warm Grey** for the `config init` instruction.
@@ -474,7 +474,7 @@ voice = "cypherpunk"    # "cypherpunk" | "standard" (default: "cypherpunk")
   - "Sealing transaction" → "Submitting transaction"
   - "Communing with the bridge oracle" → "Requesting deposit address"
 - `animations = false` disables text scramble and binary spinner (uses static output)
-- `unicode = false` replaces `┏━┓` with `+-+`, `╤║╤` with `*T*`, and `✠` with `*`
+- `unicode = false` replaces `┏━┓` with `+-+` and `✠` with `*`
 - All theme settings are overridable via CLI flags: `--no-banner`, `--color never`, `--no-animation`
 
 ### Theme Module (`src/display/theme.rs`)
@@ -907,7 +907,7 @@ cargo doc --no-deps && mdbook build docs/ && mdbook test docs/
 - Status indicators: `●` Green (active), `○` Warm Grey (paused), `◉` Red (frozen)
 
 #### Interactive Prompts (themed `dialoguer`)
-- Custom `ColorfulTheme` with temple mark (`╤║╤`) prompt prefix in Gold
+- Custom `ColorfulTheme` with Templar cross (`✠`) prompt prefix in Gold
 - Active item prefix `▸` in Gold, inactive items in Warm Grey
 - Success `✓` in Green, error `✗` in Red
 - Cypherpunk voice for prompt labels ("Forging your configuration...", "Select your keychain:")
