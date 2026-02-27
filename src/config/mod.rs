@@ -93,11 +93,7 @@ impl Default for Config {
         let mut profiles = std::collections::HashMap::new();
         profiles.insert("mainnet".into(), profile::Profile::mainnet());
         profiles.insert("testnet".into(), profile::Profile::testnet());
-        Self {
-            active_profile: "mainnet".into(),
-            profiles,
-            theme: ThemeConfig::default(),
-        }
+        Self { active_profile: "mainnet".into(), profiles, theme: ThemeConfig::default() }
     }
 }
 
@@ -183,12 +179,8 @@ pub fn write_file_secure(path: &Path, data: &[u8]) -> Result<(), CliError> {
         use std::fs::OpenOptions;
         use std::io::Write;
         use std::os::unix::fs::OpenOptionsExt;
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .mode(0o600)
-            .open(path)?;
+        let mut file =
+            OpenOptions::new().write(true).create(true).truncate(true).mode(0o600).open(path)?;
         file.write_all(data)?;
     }
     #[cfg(not(unix))]
@@ -293,8 +285,7 @@ mod tests {
 
     #[test]
     fn active_profile_not_found() {
-        let mut config = Config::default();
-        config.active_profile = "nonexistent".into();
+        let config = Config { active_profile: "nonexistent".into(), ..Config::default() };
         let result = config.active_profile();
         assert!(result.is_err());
     }

@@ -157,8 +157,8 @@ mod tests {
 
     #[test]
     fn full_mark_min_width_is_reasonable() {
-        assert!(FULL_MARK_MIN_WIDTH >= 60);
-        assert!(FULL_MARK_MIN_WIDTH <= 120);
+        const { assert!(FULL_MARK_MIN_WIDTH >= 60) };
+        const { assert!(FULL_MARK_MIN_WIDTH <= 120) };
     }
 
     #[test]

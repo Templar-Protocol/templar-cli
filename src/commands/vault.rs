@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use clap::Subcommand;
+use super::GlobalOpts;
 use crate::error::CliError;
 use crate::near::rpc::NearRpcClient;
-use super::GlobalOpts;
+use clap::Subcommand;
 
 /// Vault subcommands.
 #[derive(Subcommand, Debug)]
@@ -66,17 +66,16 @@ impl VaultCommand {
     pub async fn run(&self, opts: &GlobalOpts) -> Result<(), CliError> {
         let config = crate::config::Config::load()?;
         let profile = super::markets::resolve_profile_pub(&config, opts)?;
-        let rpc: Arc<dyn NearRpcClient> = Arc::new(
-            crate::near::rpc::RpcClient::new(opts.effective_rpc_url(profile)),
-        );
+        let rpc: Arc<dyn NearRpcClient> =
+            Arc::new(crate::near::rpc::RpcClient::new(opts.effective_rpc_url(profile)));
 
         match self {
             Self::Info { vault_id } => {
-                let vault_account = vault_id.parse()
+                let vault_account = vault_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid vault ID: {e}")))?;
-                let client = crate::near::contract::vault::VaultClient::new(
-                    rpc, vault_account, None,
-                );
+                let client =
+                    crate::near::contract::vault::VaultClient::new(rpc, vault_account, None);
                 let vault_config = client.get_configuration().await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&vault_config)?);
@@ -88,21 +87,21 @@ impl VaultCommand {
                 Ok(())
             }
             Self::PreviewDeposit { vault_id, amount } => {
-                let vault_account = vault_id.parse()
+                let vault_account = vault_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid vault ID: {e}")))?;
-                let client = crate::near::contract::vault::VaultClient::new(
-                    rpc, vault_account, None,
-                );
+                let client =
+                    crate::near::contract::vault::VaultClient::new(rpc, vault_account, None);
                 let shares = client.preview_deposit(amount).await?;
                 println!("  Depositing {amount} would mint {shares} shares");
                 Ok(())
             }
             Self::PreviewRedeem { vault_id, shares } => {
-                let vault_account = vault_id.parse()
+                let vault_account = vault_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid vault ID: {e}")))?;
-                let client = crate::near::contract::vault::VaultClient::new(
-                    rpc, vault_account, None,
-                );
+                let client =
+                    crate::near::contract::vault::VaultClient::new(rpc, vault_account, None);
                 let assets = client.preview_redeem(shares).await?;
                 println!("  Redeeming {shares} shares would yield {assets} assets");
                 Ok(())

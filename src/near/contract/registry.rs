@@ -57,9 +57,7 @@ impl RegistryClient {
         contract_id: AccountId,
         signer: Option<NearSigner>,
     ) -> Self {
-        Self {
-            inner: ContractClient::new(rpc, contract_id, signer),
-        }
+        Self { inner: ContractClient::new(rpc, contract_id, signer) }
     }
 
     /// Returns the contract account ID.
@@ -77,9 +75,7 @@ impl RegistryClient {
         from_index: u64,
         limit: u64,
     ) -> Result<Vec<serde_json::Value>, CliError> {
-        self.inner
-            .view("list_versions", &PaginationArgs { from_index, limit })
-            .await
+        self.inner.view("list_versions", &PaginationArgs { from_index, limit }).await
     }
 
     /// Get the code hash for a specific version.
@@ -88,12 +84,7 @@ impl RegistryClient {
         version: &str,
     ) -> Result<serde_json::Value, CliError> {
         self.inner
-            .view(
-                "get_version_code_hash",
-                &VersionArgs {
-                    version: version.to_string(),
-                },
-            )
+            .view("get_version_code_hash", &VersionArgs { version: version.to_string() })
             .await
     }
 
@@ -103,9 +94,7 @@ impl RegistryClient {
         from_index: u64,
         limit: u64,
     ) -> Result<Vec<serde_json::Value>, CliError> {
-        self.inner
-            .view("list_deployments", &PaginationArgs { from_index, limit })
-            .await
+        self.inner.view("list_deployments", &PaginationArgs { from_index, limit }).await
     }
 
     /// Get deployment metadata for a specific contract.
@@ -114,21 +103,14 @@ impl RegistryClient {
         contract_id: &AccountId,
     ) -> Result<serde_json::Value, CliError> {
         self.inner
-            .view(
-                "get_deployment",
-                &DeploymentArgs {
-                    contract_id: contract_id.clone(),
-                },
-            )
+            .view("get_deployment", &DeploymentArgs { contract_id: contract_id.clone() })
             .await
     }
 }
 
 impl std::fmt::Debug for RegistryClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("RegistryClient")
-            .field("contract_id", self.inner.contract_id())
-            .finish()
+        f.debug_struct("RegistryClient").field("contract_id", self.inner.contract_id()).finish()
     }
 }
 
@@ -145,15 +127,14 @@ mod tests {
     fn mock_view_rpc(response: serde_json::Value) -> Arc<MockNearRpcClient> {
         let mut mock = MockNearRpcClient::new();
         let bytes = serde_json::to_vec(&response).unwrap();
-        mock.expect_view_function()
-            .returning(move |_, _, _| {
-                Ok(ViewCallResult {
-                    result: bytes.clone(),
-                    logs: vec![],
-                    block_height: 300,
-                    block_hash: CryptoHash::default(),
-                })
-            });
+        mock.expect_view_function().returning(move |_, _, _| {
+            Ok(ViewCallResult {
+                result: bytes.clone(),
+                logs: vec![],
+                block_height: 300,
+                block_hash: CryptoHash::default(),
+            })
+        });
         Arc::new(mock)
     }
 
@@ -250,10 +231,7 @@ mod tests {
 
     #[test]
     fn pagination_args_serialize() {
-        let args = PaginationArgs {
-            from_index: 5,
-            limit: 25,
-        };
+        let args = PaginationArgs { from_index: 5, limit: 25 };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["from_index"], 5);
         assert_eq!(json["limit"], 25);
@@ -261,18 +239,14 @@ mod tests {
 
     #[test]
     fn version_args_serialize() {
-        let args = VersionArgs {
-            version: "1.0.0".to_string(),
-        };
+        let args = VersionArgs { version: "1.0.0".to_string() };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["version"], "1.0.0");
     }
 
     #[test]
     fn deployment_args_serialize() {
-        let args = DeploymentArgs {
-            contract_id: "market.tmplr.near".parse().unwrap(),
-        };
+        let args = DeploymentArgs { contract_id: "market.tmplr.near".parse().unwrap() };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["contract_id"], "market.tmplr.near");
     }

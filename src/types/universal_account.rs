@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 /// is the public key or identifier in the scheme's native encoding.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum KeyId {
-    /// A WebAuthn / FIDO2 passkey.
+    /// A `WebAuthn` / FIDO2 passkey.
     Passkey(String),
 
     /// A raw Ed25519 public key (base58 or hex encoded).

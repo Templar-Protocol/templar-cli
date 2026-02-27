@@ -54,36 +54,22 @@ pub struct PriceResponse {
 impl BackendClient {
     /// Create a new backend client.
     pub fn new(base_url: &str) -> Result<Self, CliError> {
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
-            .build()?;
-        Ok(Self {
-            client,
-            base_url: base_url.trim_end_matches('/').to_string(),
-        })
+        let client =
+            reqwest::Client::builder().timeout(std::time::Duration::from_secs(30)).build()?;
+        Ok(Self { client, base_url: base_url.trim_end_matches('/').to_string() })
     }
 
     /// Check backend health.
     pub async fn health(&self) -> Result<HealthResponse, CliError> {
-        let resp = self
-            .client
-            .get(format!("{}/v1/health", self.base_url))
-            .send()
-            .await?
-            .json()
-            .await?;
+        let resp =
+            self.client.get(format!("{}/v1/health", self.base_url)).send().await?.json().await?;
         Ok(resp)
     }
 
     /// List all markets.
     pub async fn list_markets(&self) -> Result<Vec<MarketSummary>, CliError> {
-        let resp = self
-            .client
-            .get(format!("{}/v1/markets", self.base_url))
-            .send()
-            .await?
-            .json()
-            .await?;
+        let resp =
+            self.client.get(format!("{}/v1/markets", self.base_url)).send().await?.json().await?;
         Ok(resp)
     }
 

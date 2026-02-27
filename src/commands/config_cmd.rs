@@ -2,9 +2,9 @@
 
 use clap::Subcommand;
 
+use super::GlobalOpts;
 use crate::config::Config;
 use crate::error::CliError;
-use super::GlobalOpts;
 
 /// Configuration management subcommands.
 #[derive(Subcommand, Debug)]
@@ -50,7 +50,11 @@ async fn run_init(_opts: &GlobalOpts) -> Result<(), CliError> {
 async fn run_show(opts: &GlobalOpts) -> Result<(), CliError> {
     let config = Config::load()?;
     if opts.json_output() {
-        println!("{}", serde_json::to_string_pretty(&config).map_err(|e| CliError::Serialization(e.to_string()))?);
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&config)
+                .map_err(|e| CliError::Serialization(e.to_string()))?
+        );
     } else {
         println!("  Active profile: {}", config.active_profile);
         let profile = config.active_profile()?;

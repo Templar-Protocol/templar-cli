@@ -13,7 +13,7 @@
 //! - Supply: `msg = "\"Supply\""`
 //! - Collateralize: `msg = "\"Collateralize\""`
 //! - Repay: `msg = "\"Repay\""`
-//! - Liquidate: `msg = "{\"Liquidate\":{\"account_id\":\"<target>\"}}"``
+//! - Liquidate: `msg = "{\"Liquidate\":{\"account_id\":\"<target>\"}}"`
 
 use std::sync::Arc;
 
@@ -112,9 +112,7 @@ impl MarketClient {
         contract_id: AccountId,
         signer: Option<NearSigner>,
     ) -> Self {
-        Self {
-            inner: ContractClient::new(rpc, contract_id, signer),
-        }
+        Self { inner: ContractClient::new(rpc, contract_id, signer) }
     }
 
     /// Returns the contract account ID.
@@ -138,9 +136,7 @@ impl MarketClient {
 
     /// Get the number of finalized snapshots.
     pub async fn get_finalized_snapshots_len(&self) -> Result<u64, CliError> {
-        self.inner
-            .view("get_finalized_snapshots_len", &serde_json::json!({}))
-            .await
+        self.inner.view("get_finalized_snapshots_len", &serde_json::json!({})).await
     }
 
     /// List finalized snapshots with pagination.
@@ -149,19 +145,12 @@ impl MarketClient {
         from_index: u64,
         limit: u64,
     ) -> Result<Vec<serde_json::Value>, CliError> {
-        self.inner
-            .view(
-                "list_finalized_snapshots",
-                &PaginationArgs { from_index, limit },
-            )
-            .await
+        self.inner.view("list_finalized_snapshots", &PaginationArgs { from_index, limit }).await
     }
 
     /// Get borrow asset metrics.
     pub async fn get_borrow_asset_metrics(&self) -> Result<serde_json::Value, CliError> {
-        self.inner
-            .view("get_borrow_asset_metrics", &serde_json::json!({}))
-            .await
+        self.inner.view("get_borrow_asset_metrics", &serde_json::json!({})).await
     }
 
     /// Get a specific account's borrow position.
@@ -170,12 +159,7 @@ impl MarketClient {
         account_id: &AccountId,
     ) -> Result<serde_json::Value, CliError> {
         self.inner
-            .view(
-                "get_borrow_position",
-                &AccountArgs {
-                    account_id: account_id.clone(),
-                },
-            )
+            .view("get_borrow_position", &AccountArgs { account_id: account_id.clone() })
             .await
     }
 
@@ -185,12 +169,7 @@ impl MarketClient {
         from_index: u64,
         limit: u64,
     ) -> Result<Vec<serde_json::Value>, CliError> {
-        self.inner
-            .view(
-                "list_borrow_positions",
-                &PaginationArgs { from_index, limit },
-            )
-            .await
+        self.inner.view("list_borrow_positions", &PaginationArgs { from_index, limit }).await
     }
 
     /// Get pending interest for a borrow position.
@@ -201,9 +180,7 @@ impl MarketClient {
         self.inner
             .view(
                 "get_borrow_position_pending_interest",
-                &AccountArgs {
-                    account_id: account_id.clone(),
-                },
+                &AccountArgs { account_id: account_id.clone() },
             )
             .await
     }
@@ -213,14 +190,7 @@ impl MarketClient {
         &self,
         account_id: &AccountId,
     ) -> Result<serde_json::Value, CliError> {
-        self.inner
-            .view(
-                "get_borrow_status",
-                &AccountArgs {
-                    account_id: account_id.clone(),
-                },
-            )
-            .await
+        self.inner.view("get_borrow_status", &AccountArgs { account_id: account_id.clone() }).await
     }
 
     /// Get a specific account's supply position.
@@ -229,12 +199,7 @@ impl MarketClient {
         account_id: &AccountId,
     ) -> Result<serde_json::Value, CliError> {
         self.inner
-            .view(
-                "get_supply_position",
-                &AccountArgs {
-                    account_id: account_id.clone(),
-                },
-            )
+            .view("get_supply_position", &AccountArgs { account_id: account_id.clone() })
             .await
     }
 
@@ -244,12 +209,7 @@ impl MarketClient {
         from_index: u64,
         limit: u64,
     ) -> Result<Vec<serde_json::Value>, CliError> {
-        self.inner
-            .view(
-                "list_supply_positions",
-                &PaginationArgs { from_index, limit },
-            )
-            .await
+        self.inner.view("list_supply_positions", &PaginationArgs { from_index, limit }).await
     }
 
     /// Get pending yield for a supply position.
@@ -260,9 +220,7 @@ impl MarketClient {
         self.inner
             .view(
                 "get_supply_position_pending_yield",
-                &AccountArgs {
-                    account_id: account_id.clone(),
-                },
+                &AccountArgs { account_id: account_id.clone() },
             )
             .await
     }
@@ -275,27 +233,19 @@ impl MarketClient {
         self.inner
             .view(
                 "get_supply_withdrawal_request_status",
-                &AccountArgs {
-                    account_id: account_id.clone(),
-                },
+                &AccountArgs { account_id: account_id.clone() },
             )
             .await
     }
 
     /// Get the overall supply withdrawal queue status.
-    pub async fn get_supply_withdrawal_queue_status(
-        &self,
-    ) -> Result<serde_json::Value, CliError> {
-        self.inner
-            .view("get_supply_withdrawal_queue_status", &serde_json::json!({}))
-            .await
+    pub async fn get_supply_withdrawal_queue_status(&self) -> Result<serde_json::Value, CliError> {
+        self.inner.view("get_supply_withdrawal_queue_status", &serde_json::json!({})).await
     }
 
     /// Get the last yield rate.
     pub async fn get_last_yield_rate(&self) -> Result<serde_json::Value, CliError> {
-        self.inner
-            .view("get_last_yield_rate", &serde_json::json!({}))
-            .await
+        self.inner.view("get_last_yield_rate", &serde_json::json!({})).await
     }
 
     /// Get the static yield configuration.
@@ -308,19 +258,9 @@ impl MarketClient {
     // -----------------------------------------------------------------------
 
     /// Borrow from the market.
-    pub async fn borrow(
-        &self,
-        amount: &str,
-    ) -> Result<FinalExecutionOutcomeView, CliError> {
+    pub async fn borrow(&self, amount: &str) -> Result<FinalExecutionOutcomeView, CliError> {
         self.inner
-            .call(
-                "borrow",
-                &AmountArgs {
-                    amount: amount.to_string(),
-                },
-                DEFAULT_GAS,
-                ONE_YOCTO,
-            )
+            .call("borrow", &AmountArgs { amount: amount.to_string() }, DEFAULT_GAS, ONE_YOCTO)
             .await
     }
 
@@ -332,9 +272,7 @@ impl MarketClient {
         self.inner
             .call(
                 "withdraw_collateral",
-                &WithdrawCollateralArgs {
-                    amount: amount.to_string(),
-                },
+                &WithdrawCollateralArgs { amount: amount.to_string() },
                 DEFAULT_GAS,
                 ONE_YOCTO,
             )
@@ -349,9 +287,7 @@ impl MarketClient {
         self.inner
             .call(
                 "create_supply_withdrawal_request",
-                &AmountArgs {
-                    amount: amount.to_string(),
-                },
+                &AmountArgs { amount: amount.to_string() },
                 DEFAULT_GAS,
                 ONE_YOCTO,
             )
@@ -362,9 +298,7 @@ impl MarketClient {
     pub async fn cancel_supply_withdrawal_request(
         &self,
     ) -> Result<FinalExecutionOutcomeView, CliError> {
-        self.inner
-            .call_one_yocto("cancel_supply_withdrawal_request", &serde_json::json!({}))
-            .await
+        self.inner.call_one_yocto("cancel_supply_withdrawal_request", &serde_json::json!({})).await
     }
 
     /// Execute the next supply withdrawal request in the queue.
@@ -372,51 +306,34 @@ impl MarketClient {
         &self,
     ) -> Result<FinalExecutionOutcomeView, CliError> {
         self.inner
-            .call_no_deposit(
-                "execute_next_supply_withdrawal_request",
-                &serde_json::json!({}),
-            )
+            .call_no_deposit("execute_next_supply_withdrawal_request", &serde_json::json!({}))
             .await
     }
 
     /// Harvest accrued yield from a supply position.
     pub async fn harvest_yield(&self) -> Result<FinalExecutionOutcomeView, CliError> {
-        self.inner
-            .call_one_yocto("harvest_yield", &serde_json::json!({}))
-            .await
+        self.inner.call_one_yocto("harvest_yield", &serde_json::json!({})).await
     }
 
     /// Apply interest to a borrow position.
     pub async fn apply_interest(&self) -> Result<FinalExecutionOutcomeView, CliError> {
-        self.inner
-            .call_no_deposit("apply_interest", &serde_json::json!({}))
-            .await
+        self.inner.call_no_deposit("apply_interest", &serde_json::json!({})).await
     }
 
     /// Accumulate static yield.
-    pub async fn accumulate_static_yield(
-        &self,
-    ) -> Result<FinalExecutionOutcomeView, CliError> {
-        self.inner
-            .call_no_deposit("accumulate_static_yield", &serde_json::json!({}))
-            .await
+    pub async fn accumulate_static_yield(&self) -> Result<FinalExecutionOutcomeView, CliError> {
+        self.inner.call_no_deposit("accumulate_static_yield", &serde_json::json!({})).await
     }
 
     /// Withdraw accumulated static yield.
-    pub async fn withdraw_static_yield(
-        &self,
-    ) -> Result<FinalExecutionOutcomeView, CliError> {
-        self.inner
-            .call_one_yocto("withdraw_static_yield", &serde_json::json!({}))
-            .await
+    pub async fn withdraw_static_yield(&self) -> Result<FinalExecutionOutcomeView, CliError> {
+        self.inner.call_one_yocto("withdraw_static_yield", &serde_json::json!({})).await
     }
 }
 
 impl std::fmt::Debug for MarketClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("MarketClient")
-            .field("contract_id", self.inner.contract_id())
-            .finish()
+        f.debug_struct("MarketClient").field("contract_id", self.inner.contract_id()).finish()
     }
 }
 
@@ -433,15 +350,14 @@ mod tests {
     fn mock_view_rpc(response: serde_json::Value) -> Arc<MockNearRpcClient> {
         let mut mock = MockNearRpcClient::new();
         let bytes = serde_json::to_vec(&response).unwrap();
-        mock.expect_view_function()
-            .returning(move |_, _, _| {
-                Ok(ViewCallResult {
-                    result: bytes.clone(),
-                    logs: vec![],
-                    block_height: 100,
-                    block_hash: CryptoHash::default(),
-                })
-            });
+        mock.expect_view_function().returning(move |_, _, _| {
+            Ok(ViewCallResult {
+                result: bytes.clone(),
+                logs: vec![],
+                block_height: 100,
+                block_hash: CryptoHash::default(),
+            })
+        });
         Arc::new(mock)
     }
 
@@ -467,9 +383,7 @@ mod tests {
 
     #[test]
     fn market_token_action_liquidate_msg() {
-        let action = MarketTokenAction::Liquidate {
-            account_id: "victim.near".parse().unwrap(),
-        };
+        let action = MarketTokenAction::Liquidate { account_id: "victim.near".parse().unwrap() };
         let msg = action.to_msg();
         assert_eq!(msg, "{\"Liquidate\":{\"account_id\":\"victim.near\"}}");
     }
@@ -571,10 +485,7 @@ mod tests {
         let rpc = mock_view_rpc(serde_json::json!({"pending_interest": "100"}));
         let client = market_client(rpc);
         let account_id: AccountId = "alice.near".parse().unwrap();
-        let result = client
-            .get_borrow_position_pending_interest(&account_id)
-            .await
-            .unwrap();
+        let result = client.get_borrow_position_pending_interest(&account_id).await.unwrap();
         assert_eq!(result["pending_interest"], "100");
     }
 
@@ -592,10 +503,7 @@ mod tests {
         let rpc = mock_view_rpc(serde_json::json!({"pending_yield": "50"}));
         let client = market_client(rpc);
         let account_id: AccountId = "alice.near".parse().unwrap();
-        let result = client
-            .get_supply_position_pending_yield(&account_id)
-            .await
-            .unwrap();
+        let result = client.get_supply_position_pending_yield(&account_id).await.unwrap();
         assert_eq!(result["pending_yield"], "50");
     }
 
@@ -604,10 +512,7 @@ mod tests {
         let rpc = mock_view_rpc(serde_json::json!({"position": 3}));
         let client = market_client(rpc);
         let account_id: AccountId = "alice.near".parse().unwrap();
-        let result = client
-            .get_supply_withdrawal_request_status(&account_id)
-            .await
-            .unwrap();
+        let result = client.get_supply_withdrawal_request_status(&account_id).await.unwrap();
         assert_eq!(result["position"], 3);
     }
 
@@ -663,10 +568,7 @@ mod tests {
 
     #[test]
     fn pagination_args_serialize() {
-        let args = PaginationArgs {
-            from_index: 0,
-            limit: 50,
-        };
+        let args = PaginationArgs { from_index: 0, limit: 50 };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["from_index"], 0);
         assert_eq!(json["limit"], 50);
@@ -674,18 +576,14 @@ mod tests {
 
     #[test]
     fn account_args_serialize() {
-        let args = AccountArgs {
-            account_id: "alice.near".parse().unwrap(),
-        };
+        let args = AccountArgs { account_id: "alice.near".parse().unwrap() };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["account_id"], "alice.near");
     }
 
     #[test]
     fn amount_args_serialize() {
-        let args = AmountArgs {
-            amount: "1000000".to_string(),
-        };
+        let args = AmountArgs { amount: "1000000".to_string() };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["amount"], "1000000");
     }

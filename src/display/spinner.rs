@@ -58,28 +58,20 @@ pub fn binary_spinner(theme: &Theme, message: &str, no_animation: bool) -> Progr
 
     let pb = ProgressBar::new_spinner();
 
-    let tick_strings: Vec<Cow<'static, str>> = BINARY_SPINNER_FRAMES
-        .iter()
-        .map(|s| Cow::Borrowed(*s))
-        .collect();
+    let tick_strings: Vec<Cow<'static, str>> =
+        BINARY_SPINNER_FRAMES.iter().map(|s| Cow::Borrowed(*s)).collect();
 
     let style = ProgressStyle::default_spinner()
-        .tick_strings(&tick_strings.iter().map(|c| c.as_ref()).collect::<Vec<_>>())
+        .tick_strings(&tick_strings.iter().map(std::convert::AsRef::as_ref).collect::<Vec<_>>())
         .template("{spinner} {msg}")
         .expect("valid spinner template");
 
     pb.set_style(style);
-    pb.set_message(format!(
-        "{}",
-        if theme.color_enabled {
-            Style::new()
-                .color256(TemplarPalette::IVORY)
-                .apply_to(message)
-                .to_string()
-        } else {
-            message.to_string()
-        }
-    ));
+    pb.set_message(if theme.color_enabled {
+        Style::new().color256(TemplarPalette::IVORY).apply_to(message).to_string()
+    } else {
+        message.to_string()
+    });
     pb.enable_steady_tick(Duration::from_millis(SPINNER_TICK_MS));
     pb
 }
@@ -110,22 +102,12 @@ const SCRAMBLE_CHARS: &[u8] = b"0123456789abcdef!@#$%^&*(){}[]|/<>";
 ///
 /// When `no_animation` is `true` the text is printed immediately without
 /// any scramble effect.
-pub fn scramble_reveal(
-    theme: &Theme,
-    text: &str,
-    total_duration: Duration,
-    no_animation: bool,
-) {
+pub fn scramble_reveal(theme: &Theme, text: &str, total_duration: Duration, no_animation: bool) {
     let term = console::Term::stderr();
 
     if no_animation || text.is_empty() {
         let styled = if theme.color_enabled {
-            format!(
-                "{}",
-                Style::new()
-                    .color256(TemplarPalette::GOLD)
-                    .apply_to(text)
-            )
+            format!("{}", Style::new().color256(TemplarPalette::GOLD).apply_to(text))
         } else {
             text.to_string()
         };
@@ -155,12 +137,7 @@ pub fn scramble_reveal(
         }
 
         let styled = if theme.color_enabled {
-            format!(
-                "{}",
-                Style::new()
-                    .color256(TemplarPalette::GOLD)
-                    .apply_to(&line)
-            )
+            format!("{}", Style::new().color256(TemplarPalette::GOLD).apply_to(&line))
         } else {
             line.clone()
         };
@@ -351,8 +328,8 @@ mod tests {
 
     #[test]
     fn spinner_tick_ms_is_reasonable() {
-        assert!(SPINNER_TICK_MS >= 50);
-        assert!(SPINNER_TICK_MS <= 500);
+        const { assert!(SPINNER_TICK_MS >= 50) };
+        const { assert!(SPINNER_TICK_MS <= 500) };
     }
 
     #[test]

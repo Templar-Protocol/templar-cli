@@ -6,7 +6,7 @@
 //! ## Retry strategy
 //!
 //! - View calls retry up to [`MAX_RETRIES`] on transient failures (5xx, connection errors).
-//! - Transaction sends do **not** retry blindly; on timeout they poll [`tx_status`]
+//! - Transaction sends do **not** retry blindly; on timeout they poll `tx_status`
 //!   to avoid double-spending.
 //! - Exponential backoff: starts at [`INITIAL_BACKOFF_MS`], multiplied by
 //!   [`BACKOFF_MULTIPLIER`] each attempt, capped at [`MAX_BACKOFF_MS`].
@@ -16,13 +16,11 @@ use std::time::Duration;
 use async_trait::async_trait;
 use near_jsonrpc_client::methods;
 use near_jsonrpc_client::JsonRpcClient;
+use near_jsonrpc_primitives::types::query::QueryResponseKind;
 use near_primitives::hash::CryptoHash;
 use near_primitives::transaction::SignedTransaction;
 use near_primitives::types::{AccountId, BlockReference, Finality, FunctionArgs};
-use near_jsonrpc_primitives::types::query::QueryResponseKind;
-use near_primitives::views::{
-    AccessKeyView, AccountView, FinalExecutionOutcomeView, QueryRequest,
-};
+use near_primitives::views::{AccessKeyView, AccountView, FinalExecutionOutcomeView, QueryRequest};
 use serde::de::DeserializeOwned;
 use tracing::{debug, warn};
 
@@ -80,10 +78,7 @@ pub enum RpcErrorKind {
 impl RpcErrorKind {
     /// Returns `true` if this error kind is safe to retry.
     pub fn is_retryable(&self) -> bool {
-        matches!(
-            self,
-            Self::ServerError | Self::Timeout | Self::ConnectionRefused
-        )
+        matches!(self, Self::ServerError | Self::Timeout | Self::ConnectionRefused)
     }
 }
 
@@ -103,12 +98,10 @@ pub fn classify_rpc_error(err_msg: &str) -> RpcErrorKind {
         || lower.contains("executionerror")
     {
         RpcErrorKind::ContractError
-    } else if RETRYABLE_STATUS_CODES
-        .iter()
-        .any(|code| lower.contains(&code.to_string()))
+    } else if RETRYABLE_STATUS_CODES.iter().any(|code| lower.contains(&code.to_string()))
+        || lower.contains("server error")
+        || lower.contains("internal error")
     {
-        RpcErrorKind::ServerError
-    } else if lower.contains("server error") || lower.contains("internal error") {
         RpcErrorKind::ServerError
     } else {
         RpcErrorKind::ClientError
@@ -136,9 +129,7 @@ impl ViewCallResult {
     /// Deserialize the result bytes as JSON into `T`.
     pub fn json<T: DeserializeOwned>(&self) -> Result<T, CliError> {
         serde_json::from_slice(&self.result).map_err(|e| {
-            CliError::Serialization(format!(
-                "failed to deserialize view call result: {e}"
-            ))
+            CliError::Serialization(format!("failed to deserialize view call result: {e}"))
         })
     }
 }
@@ -234,11 +225,7 @@ impl RpcClient {
         for attempt in 0..=MAX_RETRIES {
             if attempt > 0 {
                 let backoff = Self::backoff_duration(attempt - 1);
-                debug!(
-                    attempt,
-                    backoff_ms = backoff.as_millis(),
-                    "retrying view call"
-                );
+                debug!(attempt, backoff_ms = backoff.as_millis(), "retrying view call");
                 tokio::time::sleep(backoff).await;
             }
 
@@ -259,9 +246,7 @@ impl RpcClient {
 
             match result {
                 Ok(Ok(response)) => {
-                    if let QueryResponseKind::CallResult(call_result) =
-                        response.kind
-                    {
+                    if let QueryResponseKind::CallResult(call_result) = response.kind {
                         return Ok(ViewCallResult {
                             result: call_result.result,
                             logs: call_result.logs,
@@ -269,9 +254,7 @@ impl RpcClient {
                             block_hash: response.block_hash,
                         });
                     }
-                    return Err(CliError::Rpc(
-                        "unexpected response kind for view call".into(),
-                    ));
+                    return Err(CliError::Rpc("unexpected response kind for view call".into()));
                 }
                 Ok(Err(e)) => {
                     let err_msg = e.to_string();
@@ -301,9 +284,7 @@ impl RpcClient {
             }
         }
 
-        Err(CliError::Rpc(
-            last_err.unwrap_or_else(|| "view call failed after all retries".into()),
-        ))
+        Err(CliError::Rpc(last_err.unwrap_or_else(|| "view call failed after all retries".into())))
     }
 }
 
@@ -315,16 +296,13 @@ impl NearRpcClient for RpcClient {
         method_name: &str,
         args: Vec<u8>,
     ) -> Result<ViewCallResult, CliError> {
-        self.view_function_with_retry(account_id, method_name, args)
-            .await
+        self.view_function_with_retry(account_id, method_name, args).await
     }
 
     async fn view_account(&self, account_id: &AccountId) -> Result<AccountView, CliError> {
         let request = methods::query::RpcQueryRequest {
             block_reference: BlockReference::Finality(Finality::Final),
-            request: QueryRequest::ViewAccount {
-                account_id: account_id.clone(),
-            },
+            request: QueryRequest::ViewAccount { account_id: account_id.clone() },
         };
 
         let result = tokio::time::timeout(
@@ -335,14 +313,10 @@ impl NearRpcClient for RpcClient {
 
         match result {
             Ok(Ok(response)) => {
-                if let QueryResponseKind::ViewAccount(account_view) =
-                    response.kind
-                {
+                if let QueryResponseKind::ViewAccount(account_view) = response.kind {
                     Ok(account_view)
                 } else {
-                    Err(CliError::Rpc(
-                        "unexpected response kind for view_account".into(),
-                    ))
+                    Err(CliError::Rpc("unexpected response kind for view_account".into()))
                 }
             }
             Ok(Err(e)) => Err(CliError::Rpc(e.to_string())),
@@ -359,9 +333,8 @@ impl NearRpcClient for RpcClient {
         let tx_hash = tx.get_hash();
         let sender_id = tx.transaction.signer_id().clone();
 
-        let request = methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest {
-            signed_transaction: tx,
-        };
+        let request =
+            methods::broadcast_tx_commit::RpcBroadcastTxCommitRequest { signed_transaction: tx };
 
         let result = tokio::time::timeout(
             Duration::from_millis(SEND_TX_TIMEOUT_MS),
@@ -412,11 +385,10 @@ impl NearRpcClient for RpcClient {
             }
 
             let request = methods::tx::RpcTransactionStatusRequest {
-                transaction_info:
-                    methods::tx::TransactionInfo::TransactionId {
-                        tx_hash,
-                        sender_account_id: sender_id.clone(),
-                    },
+                transaction_info: methods::tx::TransactionInfo::TransactionId {
+                    tx_hash,
+                    sender_account_id: sender_id.clone(),
+                },
                 wait_until: near_primitives::views::TxExecutionStatus::Final,
             };
 
@@ -433,10 +405,7 @@ impl NearRpcClient for RpcClient {
                     }
                     // Not final yet — retry.
                     if attempt < MAX_RETRIES {
-                        debug!(
-                            attempt,
-                            "tx not finalized yet, will poll again"
-                        );
+                        debug!(attempt, "tx not finalized yet, will poll again");
                         continue;
                     }
                     return Err(CliError::Rpc(format!(
@@ -464,9 +433,7 @@ impl NearRpcClient for RpcClient {
             }
         }
 
-        Err(CliError::Rpc(format!(
-            "tx_status for {tx_hash} failed after all retries"
-        )))
+        Err(CliError::Rpc(format!("tx_status for {tx_hash} failed after all retries")))
     }
 
     async fn access_key(
@@ -490,18 +457,14 @@ impl NearRpcClient for RpcClient {
 
         match result {
             Ok(Ok(response)) => {
-                if let QueryResponseKind::AccessKey(ak_view) =
-                    response.kind
-                {
+                if let QueryResponseKind::AccessKey(ak_view) = response.kind {
                     Ok(AccessKeyResult {
                         nonce: ak_view.nonce,
                         block_hash: response.block_hash,
                         access_key: ak_view,
                     })
                 } else {
-                    Err(CliError::Rpc(
-                        "unexpected response kind for access_key query".into(),
-                    ))
+                    Err(CliError::Rpc("unexpected response kind for access_key query".into()))
                 }
             }
             Ok(Err(e)) => Err(CliError::Rpc(e.to_string())),
@@ -532,26 +495,14 @@ mod tests {
 
     #[test]
     fn classify_timeout_errors() {
-        assert_eq!(
-            classify_rpc_error("request timed out after 10s"),
-            RpcErrorKind::Timeout
-        );
-        assert_eq!(
-            classify_rpc_error("Connection timeout reached"),
-            RpcErrorKind::Timeout
-        );
+        assert_eq!(classify_rpc_error("request timed out after 10s"), RpcErrorKind::Timeout);
+        assert_eq!(classify_rpc_error("Connection timeout reached"), RpcErrorKind::Timeout);
     }
 
     #[test]
     fn classify_connection_errors() {
-        assert_eq!(
-            classify_rpc_error("connection refused"),
-            RpcErrorKind::ConnectionRefused
-        );
-        assert_eq!(
-            classify_rpc_error("Connection reset by peer"),
-            RpcErrorKind::ConnectionRefused
-        );
+        assert_eq!(classify_rpc_error("connection refused"), RpcErrorKind::ConnectionRefused);
+        assert_eq!(classify_rpc_error("Connection reset by peer"), RpcErrorKind::ConnectionRefused);
     }
 
     #[test]
@@ -560,10 +511,7 @@ mod tests {
             classify_rpc_error("InvalidNonce: expected 42, got 41"),
             RpcErrorKind::InvalidNonce
         );
-        assert_eq!(
-            classify_rpc_error("invalid nonce"),
-            RpcErrorKind::InvalidNonce
-        );
+        assert_eq!(classify_rpc_error("invalid nonce"), RpcErrorKind::InvalidNonce);
     }
 
     #[test]
@@ -572,10 +520,7 @@ mod tests {
             classify_rpc_error("Smart contract panicked: insufficient balance"),
             RpcErrorKind::ContractError
         );
-        assert_eq!(
-            classify_rpc_error("Wasm execution failed"),
-            RpcErrorKind::ContractError
-        );
+        assert_eq!(classify_rpc_error("Wasm execution failed"), RpcErrorKind::ContractError);
         assert_eq!(
             classify_rpc_error("ExecutionError: some contract error"),
             RpcErrorKind::ContractError
@@ -584,34 +529,16 @@ mod tests {
 
     #[test]
     fn classify_server_errors() {
-        assert_eq!(
-            classify_rpc_error("HTTP 502 Bad Gateway"),
-            RpcErrorKind::ServerError
-        );
-        assert_eq!(
-            classify_rpc_error("server error"),
-            RpcErrorKind::ServerError
-        );
-        assert_eq!(
-            classify_rpc_error("Internal error"),
-            RpcErrorKind::ServerError
-        );
-        assert_eq!(
-            classify_rpc_error("status code 503"),
-            RpcErrorKind::ServerError
-        );
+        assert_eq!(classify_rpc_error("HTTP 502 Bad Gateway"), RpcErrorKind::ServerError);
+        assert_eq!(classify_rpc_error("server error"), RpcErrorKind::ServerError);
+        assert_eq!(classify_rpc_error("Internal error"), RpcErrorKind::ServerError);
+        assert_eq!(classify_rpc_error("status code 503"), RpcErrorKind::ServerError);
     }
 
     #[test]
     fn classify_client_errors() {
-        assert_eq!(
-            classify_rpc_error("invalid method params"),
-            RpcErrorKind::ClientError
-        );
-        assert_eq!(
-            classify_rpc_error("unknown error occurred"),
-            RpcErrorKind::ClientError
-        );
+        assert_eq!(classify_rpc_error("invalid method params"), RpcErrorKind::ClientError);
+        assert_eq!(classify_rpc_error("unknown error occurred"), RpcErrorKind::ClientError);
     }
 
     #[test]
@@ -628,27 +555,24 @@ mod tests {
     #[test]
     fn backoff_duration_capped_at_max() {
         let d10 = RpcClient::backoff_duration(10);
-        assert!(d10.as_millis() <= MAX_BACKOFF_MS as u128);
+        assert!(d10.as_millis() <= u128::from(MAX_BACKOFF_MS));
     }
 
     #[test]
     fn constants_are_sane() {
-        assert!(MAX_RETRIES > 0);
-        assert!(INITIAL_BACKOFF_MS > 0);
-        assert!(BACKOFF_MULTIPLIER > 1.0);
-        assert!(MAX_BACKOFF_MS >= INITIAL_BACKOFF_MS);
-        assert!(TOTAL_TIMEOUT_MS > VIEW_CALL_TIMEOUT_MS);
-        assert!(SEND_TX_TIMEOUT_MS >= VIEW_CALL_TIMEOUT_MS);
-        assert!(!RETRYABLE_STATUS_CODES.is_empty());
+        const { assert!(MAX_RETRIES > 0) };
+        const { assert!(INITIAL_BACKOFF_MS > 0) };
+        const { assert!(BACKOFF_MULTIPLIER > 1.0) };
+        const { assert!(MAX_BACKOFF_MS >= INITIAL_BACKOFF_MS) };
+        const { assert!(TOTAL_TIMEOUT_MS > VIEW_CALL_TIMEOUT_MS) };
+        const { assert!(SEND_TX_TIMEOUT_MS >= VIEW_CALL_TIMEOUT_MS) };
+        const { assert!(!RETRYABLE_STATUS_CODES.is_empty()) };
     }
 
     #[test]
     fn retryable_status_codes_are_5xx_range() {
         for code in RETRYABLE_STATUS_CODES {
-            assert!(
-                *code >= 500,
-                "expected 5xx status code, got {code}"
-            );
+            assert!(*code >= 500, "expected 5xx status code, got {code}");
         }
     }
 
@@ -697,10 +621,7 @@ mod tests {
             .returning(move |_, _, _| Ok(expected_clone.clone()));
 
         let account_id: AccountId = "test.near".parse().unwrap();
-        let result = mock
-            .view_function(&account_id, "get_data", b"{}".to_vec())
-            .await
-            .unwrap();
+        let result = mock.view_function(&account_id, "get_data", b"{}".to_vec()).await.unwrap();
 
         assert_eq!(result.result, expected_result.result);
         assert_eq!(result.logs, expected_result.logs);
@@ -716,9 +637,7 @@ mod tests {
             .returning(|_, _, _| Err(CliError::Rpc("contract not found".into())));
 
         let account_id: AccountId = "missing.near".parse().unwrap();
-        let result = mock
-            .view_function(&account_id, "get_data", b"{}".to_vec())
-            .await;
+        let result = mock.view_function(&account_id, "get_data", b"{}".to_vec()).await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -754,9 +673,7 @@ mod tests {
 
         mock.expect_tx_status()
             .times(1)
-            .returning(|_, _| {
-                Err(CliError::Rpc("transaction not found".into()))
-            });
+            .returning(|_, _| Err(CliError::Rpc("transaction not found".into())));
 
         let tx_hash = CryptoHash::default();
         let sender: AccountId = "alice.near".parse().unwrap();
@@ -770,15 +687,11 @@ mod tests {
 
         mock.expect_access_key()
             .times(1)
-            .returning(|_, _| {
-                Err(CliError::Rpc("access key not found".into()))
-            });
+            .returning(|_, _| Err(CliError::Rpc("access key not found".into())));
 
         let account_id: AccountId = "alice.near".parse().unwrap();
         let public_key: near_crypto::PublicKey =
-            "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp"
-                .parse()
-                .unwrap();
+            "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp".parse().unwrap();
         let result = mock.access_key(&account_id, &public_key).await;
         assert!(result.is_err());
     }

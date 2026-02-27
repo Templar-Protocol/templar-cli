@@ -87,11 +87,7 @@ impl FrameStyle {
 /// ```
 pub fn panel(theme: &Theme, style: FrameStyle, lines: &[&str]) -> String {
     let fc = style.chars();
-    let max_width = lines
-        .iter()
-        .map(|l| UnicodeWidthStr::width(*l))
-        .max()
-        .unwrap_or(0);
+    let max_width = lines.iter().map(|l| UnicodeWidthStr::width(*l)).max().unwrap_or(0);
 
     // Inner width = content + 2 spaces of padding
     let inner = max_width + 2;
@@ -102,12 +98,7 @@ pub fn panel(theme: &Theme, style: FrameStyle, lines: &[&str]) -> String {
     let _ = writeln!(
         out,
         "{}",
-        theme.gold.apply_to(format!(
-            "{}{}{}",
-            fc.tl,
-            repeat_char(fc.h, inner),
-            fc.tr,
-        ))
+        theme.gold.apply_to(format!("{}{}{}", fc.tl, repeat_char(fc.h, inner), fc.tr,))
     );
 
     // Content rows
@@ -117,13 +108,7 @@ pub fn panel(theme: &Theme, style: FrameStyle, lines: &[&str]) -> String {
         let _ = writeln!(
             out,
             "{}",
-            theme.gold.apply_to(format!(
-                "{} {}{} {}",
-                fc.v,
-                line,
-                " ".repeat(pad),
-                fc.v,
-            ))
+            theme.gold.apply_to(format!("{} {}{} {}", fc.v, line, " ".repeat(pad), fc.v,))
         );
     }
 
@@ -131,12 +116,7 @@ pub fn panel(theme: &Theme, style: FrameStyle, lines: &[&str]) -> String {
     let _ = write!(
         out,
         "{}",
-        theme.gold.apply_to(format!(
-            "{}{}{}",
-            fc.bl,
-            repeat_char(fc.h, inner),
-            fc.br,
-        ))
+        theme.gold.apply_to(format!("{}{}{}", fc.bl, repeat_char(fc.h, inner), fc.br,))
     );
 
     out
@@ -201,11 +181,7 @@ pub fn header_bar(theme: &Theme, style: FrameStyle, title: &str, width: usize) -
 /// │      Status: Active      │
 /// └──────────────────────────┘
 /// ```
-pub fn kv_panel(
-    theme: &Theme,
-    style: FrameStyle,
-    pairs: &[(&str, &str)],
-) -> String {
+pub fn kv_panel(theme: &Theme, style: FrameStyle, pairs: &[(&str, &str)]) -> String {
     let fc = style.chars();
 
     let max_key = pairs.iter().map(|(k, _)| UnicodeWidthStr::width(*k)).max().unwrap_or(0);
@@ -259,7 +235,7 @@ pub fn kv_panel(
 
 /// Repeat a character `n` times into a `String`.
 fn repeat_char(ch: char, n: usize) -> String {
-    std::iter::repeat(ch).take(n).collect()
+    std::iter::repeat_n(ch, n).collect()
 }
 
 // ---------------------------------------------------------------------------

@@ -19,7 +19,7 @@
 //!
 //! # Output format dispatch
 //!
-//! Commands call [`OutputFormat::from_opts`] to determine the active output
+//! Commands call [`OutputFormat::from_flag`] to determine the active output
 //! mode and then branch accordingly:
 //!
 //! ```rust,no_run
@@ -55,9 +55,10 @@ use crate::error::CliError;
 /// Determined by the `--output` flag or config defaults. Commands use this
 /// to decide whether to render human-readable themed output or structured
 /// JSON.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum OutputFormat {
     /// Human-readable, themed terminal output (the default).
+    #[default]
     Text,
     /// Machine-readable JSON output (for scripting / piping).
     Json,
@@ -70,7 +71,7 @@ impl OutputFormat {
     /// - `"json"` -> [`OutputFormat::Json`]
     /// - anything else or `None` -> [`OutputFormat::Text`]
     pub fn from_flag(flag: Option<&str>) -> Self {
-        match flag.map(|s| s.to_ascii_lowercase()).as_deref() {
+        match flag.map(str::to_ascii_lowercase).as_deref() {
             Some("json") => Self::Json,
             _ => Self::Text,
         }
@@ -84,12 +85,6 @@ impl OutputFormat {
     /// Returns `true` if this is the human-readable text mode.
     pub fn is_text(self) -> bool {
         self == Self::Text
-    }
-}
-
-impl Default for OutputFormat {
-    fn default() -> Self {
-        Self::Text
     }
 }
 

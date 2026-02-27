@@ -99,6 +99,7 @@ pub struct Fee {
 /// Access restriction mode for a vault.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value")]
+#[derive(Default)]
 pub enum Restrictions {
     /// Vault is paused; no deposits or withdrawals allowed.
     Paused,
@@ -110,19 +111,14 @@ pub enum Restrictions {
     WhiteList(BTreeSet<String>),
 
     /// No restrictions; anyone may interact.
+    #[default]
     None,
-}
-
-impl Default for Restrictions {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::number::U64;
+    use super::*;
 
     fn sample_vault_config() -> VaultConfiguration {
         VaultConfiguration {
@@ -137,10 +133,7 @@ mod tests {
                     rate: Decimal::new("0.1"),
                     recipient: Some("fee-collector.near".into()),
                 },
-                management: Fee {
-                    rate: Decimal::new("0.02"),
-                    recipient: None,
-                },
+                management: Fee { rate: Decimal::new("0.02"), recipient: None },
                 max_total_assets_growth_rate: Some(Decimal::new("1.5")),
             },
             skim_recipient: Some("treasury.near".into()),
@@ -175,14 +168,8 @@ mod tests {
     #[test]
     fn fees_round_trip() {
         let fees = Fees {
-            performance: Fee {
-                rate: Decimal::new("0.1"),
-                recipient: Some("perf.near".into()),
-            },
-            management: Fee {
-                rate: Decimal::new("0.02"),
-                recipient: None,
-            },
+            performance: Fee { rate: Decimal::new("0.1"), recipient: Some("perf.near".into()) },
+            management: Fee { rate: Decimal::new("0.02"), recipient: None },
             max_total_assets_growth_rate: None,
         };
         let json = serde_json::to_string(&fees).unwrap();
@@ -256,10 +243,7 @@ mod tests {
 
     #[test]
     fn fee_with_no_recipient() {
-        let fee = Fee {
-            rate: Decimal::new("0.05"),
-            recipient: None,
-        };
+        let fee = Fee { rate: Decimal::new("0.05"), recipient: None };
         let json = serde_json::to_string(&fee).unwrap();
         // recipient should be omitted
         assert!(!json.contains("recipient"));

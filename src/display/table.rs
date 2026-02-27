@@ -18,20 +18,15 @@ use super::theme::Theme;
 // ---------------------------------------------------------------------------
 
 /// Horizontal alignment for a table column.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Align {
     /// Left-aligned (default).
+    #[default]
     Left,
     /// Right-aligned (e.g., numeric columns).
     Right,
     /// Centre-aligned (e.g., status indicators).
     Center,
-}
-
-impl Default for Align {
-    fn default() -> Self {
-        Self::Left
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -52,11 +47,7 @@ pub struct Column {
 impl Column {
     /// Create a new left-aligned column with the given header.
     pub fn new(header: &str) -> Self {
-        Self {
-            header: header.to_string(),
-            align: Align::Left,
-            min_width: 0,
-        }
+        Self { header: header.to_string(), align: Align::Left, min_width: 0 }
     }
 
     /// Set the alignment (builder pattern).
@@ -113,12 +104,7 @@ pub struct Table<'t> {
 impl<'t> Table<'t> {
     /// Create a new table with the given columns.
     pub fn new(theme: &'t Theme, style: FrameStyle, columns: Vec<Column>) -> Self {
-        Self {
-            theme,
-            style,
-            columns,
-            rows: Vec::new(),
-        }
+        Self { theme, style, columns, rows: Vec::new() }
     }
 
     /// Add a data row. The vector length should match the number of columns.
@@ -142,12 +128,15 @@ impl<'t> Table<'t> {
             "{}",
             self.theme.gold.apply_to(format!(
                 "{}{}{}",
-                fc.tl, repeat_char(fc.h, total_inner), fc.tr,
+                fc.tl,
+                repeat_char(fc.h, total_inner),
+                fc.tr,
             ))
         );
 
         // Header row
-        let _ = writeln!(out, "{}", self.render_row_cells(&col_widths, &self.header_strings(), true));
+        let _ =
+            writeln!(out, "{}", self.render_row_cells(&col_widths, &self.header_strings(), true));
 
         // Separator
         let _ = writeln!(
@@ -155,7 +144,9 @@ impl<'t> Table<'t> {
             "{}",
             self.theme.gold.apply_to(format!(
                 "{}{}{}",
-                fc.tl, repeat_char(fc.h, total_inner), fc.tr,
+                fc.tl,
+                repeat_char(fc.h, total_inner),
+                fc.tr,
             ))
         );
 
@@ -170,7 +161,9 @@ impl<'t> Table<'t> {
             "{}",
             self.theme.gold.apply_to(format!(
                 "{}{}{}",
-                fc.bl, repeat_char(fc.h, total_inner), fc.br,
+                fc.bl,
+                repeat_char(fc.h, total_inner),
+                fc.br,
             ))
         );
 
@@ -187,11 +180,7 @@ impl<'t> Table<'t> {
                 let data_max = self
                     .rows
                     .iter()
-                    .map(|row| {
-                        row.get(i)
-                            .map(|c| UnicodeWidthStr::width(c.as_str()))
-                            .unwrap_or(0)
-                    })
+                    .map(|row| row.get(i).map_or(0, |c| UnicodeWidthStr::width(c.as_str())))
                     .max()
                     .unwrap_or(0);
                 header_w.max(data_max).max(col.min_width)
@@ -220,10 +209,10 @@ impl<'t> Table<'t> {
         let mut parts: Vec<String> = Vec::new();
 
         for (i, col) in self.columns.iter().enumerate() {
-            let cell_text = cells.get(i).map(String::as_str).unwrap_or("");
+            let cell_text = cells.get(i).map_or("", String::as_str);
             let w = widths[i];
             let padded = align_text(cell_text, w, col.align);
-            parts.push(format!(" {} ", padded));
+            parts.push(format!(" {padded} "));
         }
 
         let content = parts.join(&fc.v.to_string());
@@ -271,7 +260,7 @@ fn align_text(text: &str, width: usize, align: Align) -> String {
 
 /// Repeat a character `n` times.
 fn repeat_char(ch: char, n: usize) -> String {
-    std::iter::repeat(ch).take(n).collect()
+    std::iter::repeat_n(ch, n).collect()
 }
 
 // ---------------------------------------------------------------------------
@@ -315,11 +304,8 @@ mod tests {
     #[test]
     fn table_renders_header_and_rows() {
         let theme = plain_theme();
-        let mut table = Table::new(
-            &theme,
-            FrameStyle::Light,
-            vec![Column::new("Name"), Column::new("Value")],
-        );
+        let mut table =
+            Table::new(&theme, FrameStyle::Light, vec![Column::new("Name"), Column::new("Value")]);
         table.add_row(vec!["foo".into(), "123".into()]);
         table.add_row(vec!["bar".into(), "456".into()]);
 
@@ -335,11 +321,7 @@ mod tests {
     #[test]
     fn table_empty_rows() {
         let theme = plain_theme();
-        let table = Table::new(
-            &theme,
-            FrameStyle::Heavy,
-            vec![Column::new("Col1")],
-        );
+        let table = Table::new(&theme, FrameStyle::Heavy, vec![Column::new("Col1")]);
         let output = table.render();
         assert!(output.contains("Col1"));
     }
@@ -363,25 +345,19 @@ mod tests {
         let mut table = Table::new(
             &theme,
             FrameStyle::Light,
-            vec![
-                Column::new("Label"),
-                Column::new("Num").align(Align::Right),
-            ],
+            vec![Column::new("Label"), Column::new("Num").align(Align::Right)],
         );
         table.add_row(vec!["x".into(), "9".into()]);
         let output = table.render();
-        assert!(output.contains("x"));
-        assert!(output.contains("9"));
+        assert!(output.contains('x'));
+        assert!(output.contains('9'));
     }
 
     #[test]
     fn table_center_aligned_column() {
         let theme = plain_theme();
-        let mut table = Table::new(
-            &theme,
-            FrameStyle::Light,
-            vec![Column::new("Status").align(Align::Center)],
-        );
+        let mut table =
+            Table::new(&theme, FrameStyle::Light, vec![Column::new("Status").align(Align::Center)]);
         table.add_row(vec!["OK".into()]);
         let output = table.render();
         assert!(output.contains("OK"));

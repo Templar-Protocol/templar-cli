@@ -213,11 +213,7 @@ async fn run_health(opts: &GlobalOpts) -> Result<(), CliError> {
             println!("Backend: healthy ({})", profile.backend_url);
         }
         Ok(resp) => {
-            println!(
-                "Backend: unhealthy — HTTP {} ({})",
-                resp.status(),
-                profile.backend_url
-            );
+            println!("Backend: unhealthy — HTTP {} ({})", resp.status(), profile.backend_url);
         }
         Err(e) => {
             println!("Backend: unreachable — {} ({})", e, profile.backend_url);
@@ -297,31 +293,22 @@ mod tests {
 
     #[test]
     fn effective_rpc_url_prefers_override() {
-        let cli = Cli::try_parse_from([
-            "templar", "--rpc-url", "https://custom-rpc.example.com",
-        ]).unwrap();
+        let cli = Cli::try_parse_from(["templar", "--rpc-url", "https://custom-rpc.example.com"])
+            .unwrap();
         let profile = crate::config::profile::Profile::mainnet();
-        assert_eq!(
-            cli.global_opts.effective_rpc_url(&profile),
-            "https://custom-rpc.example.com"
-        );
+        assert_eq!(cli.global_opts.effective_rpc_url(&profile), "https://custom-rpc.example.com");
     }
 
     #[test]
     fn effective_rpc_url_falls_back_to_profile() {
         let cli = Cli::try_parse_from(["templar"]).unwrap();
         let profile = crate::config::profile::Profile::mainnet();
-        assert_eq!(
-            cli.global_opts.effective_rpc_url(&profile),
-            profile.near_rpc_url
-        );
+        assert_eq!(cli.global_opts.effective_rpc_url(&profile), profile.near_rpc_url);
     }
 
     #[test]
     fn effective_network_prefers_override() {
-        let cli = Cli::try_parse_from([
-            "templar", "--network", "testnet",
-        ]).unwrap();
+        let cli = Cli::try_parse_from(["templar", "--network", "testnet"]).unwrap();
         let profile = crate::config::profile::Profile::mainnet();
         assert_eq!(cli.global_opts.effective_network(&profile), "testnet");
     }
@@ -330,9 +317,6 @@ mod tests {
     fn effective_network_falls_back_to_profile() {
         let cli = Cli::try_parse_from(["templar"]).unwrap();
         let profile = crate::config::profile::Profile::mainnet();
-        assert_eq!(
-            cli.global_opts.effective_network(&profile),
-            profile.near_network_id
-        );
+        assert_eq!(cli.global_opts.effective_network(&profile), profile.near_network_id);
     }
 }

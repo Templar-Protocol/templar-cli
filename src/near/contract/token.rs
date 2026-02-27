@@ -91,9 +91,7 @@ impl TokenClient {
         contract_id: AccountId,
         signer: Option<NearSigner>,
     ) -> Self {
-        Self {
-            inner: ContractClient::new(rpc, contract_id, signer),
-        }
+        Self { inner: ContractClient::new(rpc, contract_id, signer) }
     }
 
     /// Returns the contract account ID.
@@ -107,14 +105,7 @@ impl TokenClient {
 
     /// Get the fungible token balance for an account.
     pub async fn ft_balance_of(&self, account_id: &AccountId) -> Result<String, CliError> {
-        self.inner
-            .view(
-                "ft_balance_of",
-                &BalanceOfArgs {
-                    account_id: account_id.clone(),
-                },
-            )
-            .await
+        self.inner.view("ft_balance_of", &BalanceOfArgs { account_id: account_id.clone() }).await
     }
 
     /// Get the token metadata (NEP-148).
@@ -174,9 +165,7 @@ impl TokenClient {
 
 impl std::fmt::Debug for TokenClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TokenClient")
-            .field("contract_id", self.inner.contract_id())
-            .finish()
+        f.debug_struct("TokenClient").field("contract_id", self.inner.contract_id()).finish()
     }
 }
 
@@ -193,15 +182,14 @@ mod tests {
     fn mock_view_rpc(response: serde_json::Value) -> Arc<MockNearRpcClient> {
         let mut mock = MockNearRpcClient::new();
         let bytes = serde_json::to_vec(&response).unwrap();
-        mock.expect_view_function()
-            .returning(move |_, _, _| {
-                Ok(ViewCallResult {
-                    result: bytes.clone(),
-                    logs: vec![],
-                    block_height: 400,
-                    block_hash: CryptoHash::default(),
-                })
-            });
+        mock.expect_view_function().returning(move |_, _, _| {
+            Ok(ViewCallResult {
+                result: bytes.clone(),
+                logs: vec![],
+                block_height: 400,
+                block_hash: CryptoHash::default(),
+            })
+        });
         Arc::new(mock)
     }
 
@@ -243,9 +231,7 @@ mod tests {
         let rpc: Arc<MockNearRpcClient> = Arc::new(MockNearRpcClient::new());
         let client = token_client(rpc);
         let receiver: AccountId = "market.tmplr.near".parse().unwrap();
-        let result = client
-            .ft_transfer_call(&receiver, "1000000", "\"Supply\"")
-            .await;
+        let result = client.ft_transfer_call(&receiver, "1000000", "\"Supply\"").await;
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), CliError::Signing(_)));
     }
@@ -279,9 +265,7 @@ mod tests {
 
     #[test]
     fn balance_of_args_serialize() {
-        let args = BalanceOfArgs {
-            account_id: "alice.near".parse().unwrap(),
-        };
+        let args = BalanceOfArgs { account_id: "alice.near".parse().unwrap() };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["account_id"], "alice.near");
     }
@@ -312,10 +296,7 @@ mod tests {
 
     #[test]
     fn storage_deposit_args_without_account() {
-        let args = StorageDepositArgs {
-            account_id: None,
-            registration_only: None,
-        };
+        let args = StorageDepositArgs { account_id: None, registration_only: None };
         let json = serde_json::to_value(&args).unwrap();
         assert!(json.get("account_id").is_none());
         assert!(json.get("registration_only").is_none());

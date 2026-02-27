@@ -76,9 +76,7 @@ impl VaultClient {
         contract_id: AccountId,
         signer: Option<NearSigner>,
     ) -> Self {
-        Self {
-            inner: ContractClient::new(rpc, contract_id, signer),
-        }
+        Self { inner: ContractClient::new(rpc, contract_id, signer) }
     }
 
     /// Returns the contract account ID.
@@ -102,9 +100,7 @@ impl VaultClient {
 
     /// Get the last recorded total assets (before latest accrual).
     pub async fn get_last_total_assets(&self) -> Result<String, CliError> {
-        self.inner
-            .view("get_last_total_assets", &serde_json::json!({}))
-            .await
+        self.inner.view("get_last_total_assets", &serde_json::json!({})).await
     }
 
     /// Get total supply of vault shares.
@@ -119,74 +115,32 @@ impl VaultClient {
 
     /// Convert an asset amount to the equivalent vault shares.
     pub async fn convert_to_shares(&self, amount: &str) -> Result<String, CliError> {
-        self.inner
-            .view(
-                "convert_to_shares",
-                &ConvertArgs {
-                    amount: amount.to_string(),
-                },
-            )
-            .await
+        self.inner.view("convert_to_shares", &ConvertArgs { amount: amount.to_string() }).await
     }
 
     /// Convert a vault share amount to the equivalent assets.
     pub async fn convert_to_assets(&self, amount: &str) -> Result<String, CliError> {
-        self.inner
-            .view(
-                "convert_to_assets",
-                &ConvertArgs {
-                    amount: amount.to_string(),
-                },
-            )
-            .await
+        self.inner.view("convert_to_assets", &ConvertArgs { amount: amount.to_string() }).await
     }
 
     /// Preview the shares received for a deposit of the given asset amount.
     pub async fn preview_deposit(&self, amount: &str) -> Result<String, CliError> {
-        self.inner
-            .view(
-                "preview_deposit",
-                &ConvertArgs {
-                    amount: amount.to_string(),
-                },
-            )
-            .await
+        self.inner.view("preview_deposit", &ConvertArgs { amount: amount.to_string() }).await
     }
 
     /// Preview the assets needed for minting a given number of shares.
     pub async fn preview_mint(&self, amount: &str) -> Result<String, CliError> {
-        self.inner
-            .view(
-                "preview_mint",
-                &ConvertArgs {
-                    amount: amount.to_string(),
-                },
-            )
-            .await
+        self.inner.view("preview_mint", &ConvertArgs { amount: amount.to_string() }).await
     }
 
     /// Preview the shares burned for a withdrawal of the given asset amount.
     pub async fn preview_withdraw(&self, amount: &str) -> Result<String, CliError> {
-        self.inner
-            .view(
-                "preview_withdraw",
-                &ConvertArgs {
-                    amount: amount.to_string(),
-                },
-            )
-            .await
+        self.inner.view("preview_withdraw", &ConvertArgs { amount: amount.to_string() }).await
     }
 
     /// Preview the assets returned for redeeming a given number of shares.
     pub async fn preview_redeem(&self, amount: &str) -> Result<String, CliError> {
-        self.inner
-            .view(
-                "preview_redeem",
-                &ConvertArgs {
-                    amount: amount.to_string(),
-                },
-            )
-            .await
+        self.inner.view("preview_redeem", &ConvertArgs { amount: amount.to_string() }).await
     }
 
     /// Get the vault's cap groups configuration.
@@ -253,9 +207,7 @@ impl VaultClient {
 
 impl std::fmt::Debug for VaultClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("VaultClient")
-            .field("contract_id", self.inner.contract_id())
-            .finish()
+        f.debug_struct("VaultClient").field("contract_id", self.inner.contract_id()).finish()
     }
 }
 
@@ -272,15 +224,14 @@ mod tests {
     fn mock_view_rpc(response: serde_json::Value) -> Arc<MockNearRpcClient> {
         let mut mock = MockNearRpcClient::new();
         let bytes = serde_json::to_vec(&response).unwrap();
-        mock.expect_view_function()
-            .returning(move |_, _, _| {
-                Ok(ViewCallResult {
-                    result: bytes.clone(),
-                    logs: vec![],
-                    block_height: 200,
-                    block_hash: CryptoHash::default(),
-                })
-            });
+        mock.expect_view_function().returning(move |_, _, _| {
+            Ok(ViewCallResult {
+                result: bytes.clone(),
+                logs: vec![],
+                block_height: 200,
+                block_hash: CryptoHash::default(),
+            })
+        });
         Arc::new(mock)
     }
 
@@ -469,9 +420,7 @@ mod tests {
 
     #[test]
     fn convert_args_serialize() {
-        let args = ConvertArgs {
-            amount: "1000000".to_string(),
-        };
+        let args = ConvertArgs { amount: "1000000".to_string() };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["amount"], "1000000");
     }

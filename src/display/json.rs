@@ -46,22 +46,12 @@ impl JsonEnvelope {
     /// Create a success envelope containing arbitrary serialisable `data`.
     pub fn success<T: Serialize>(command: &str, data: &T) -> Result<Self, CliError> {
         let value = serde_json::to_value(data)?;
-        Ok(Self {
-            ok: true,
-            command: Some(command.to_string()),
-            data: Some(value),
-            error: None,
-        })
+        Ok(Self { ok: true, command: Some(command.to_string()), data: Some(value), error: None })
     }
 
     /// Create a success envelope from a pre-built [`serde_json::Value`].
     pub fn success_value(command: &str, value: Value) -> Self {
-        Self {
-            ok: true,
-            command: Some(command.to_string()),
-            data: Some(value),
-            error: None,
-        }
+        Self { ok: true, command: Some(command.to_string()), data: Some(value), error: None }
     }
 
     /// Create an error envelope.

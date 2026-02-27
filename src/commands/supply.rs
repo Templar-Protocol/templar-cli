@@ -1,8 +1,8 @@
 //! Supply operations — deposit, withdraw, harvest yield.
 
-use clap::Subcommand;
-use crate::error::CliError;
 use super::GlobalOpts;
+use crate::error::CliError;
+use clap::Subcommand;
 
 /// Supply subcommands.
 #[derive(Subcommand, Debug)]

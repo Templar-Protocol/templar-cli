@@ -1,8 +1,8 @@
 //! Oracle price query commands.
 
-use clap::Args;
-use crate::error::CliError;
 use super::GlobalOpts;
+use crate::error::CliError;
+use clap::Args;
 
 /// Arguments for the prices command.
 #[derive(Args, Debug)]
@@ -25,7 +25,9 @@ impl PricesArgs {
         } else {
             for (id, price) in &prices {
                 match price {
-                    Some(p) => println!("  {id}: ${} (conf: {}, expo: {})", p.price, p.conf, p.expo),
+                    Some(p) => {
+                        println!("  {id}: ${} (conf: {}, expo: {})", p.price, p.conf, p.expo);
+                    }
                     None => println!("  {id}: no price available"),
                 }
             }

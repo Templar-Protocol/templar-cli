@@ -122,9 +122,7 @@ impl std::str::FromStr for IntentsChain {
             "ada" | "cardano" => Ok(Self::Ada),
             "ltc" | "litecoin" => Ok(Self::Ltc),
             "xrp" | "ripple" => Ok(Self::Xrp),
-            other => Err(crate::error::CliError::InvalidInput(format!(
-                "unknown chain: '{other}'"
-            ))),
+            other => Err(crate::error::CliError::InvalidInput(format!("unknown chain: '{other}'"))),
         }
     }
 }
@@ -286,39 +284,15 @@ mod tests {
     fn intents_chain_from_str() {
         assert_eq!("near".parse::<IntentsChain>().unwrap(), IntentsChain::Near);
         assert_eq!("eth".parse::<IntentsChain>().unwrap(), IntentsChain::Eth);
-        assert_eq!(
-            "ethereum".parse::<IntentsChain>().unwrap(),
-            IntentsChain::Eth
-        );
-        assert_eq!(
-            "bitcoin".parse::<IntentsChain>().unwrap(),
-            IntentsChain::Btc
-        );
-        assert_eq!(
-            "solana".parse::<IntentsChain>().unwrap(),
-            IntentsChain::Sol
-        );
-        assert_eq!(
-            "stellar".parse::<IntentsChain>().unwrap(),
-            IntentsChain::Xlm
-        );
+        assert_eq!("ethereum".parse::<IntentsChain>().unwrap(), IntentsChain::Eth);
+        assert_eq!("bitcoin".parse::<IntentsChain>().unwrap(), IntentsChain::Btc);
+        assert_eq!("solana".parse::<IntentsChain>().unwrap(), IntentsChain::Sol);
+        assert_eq!("stellar".parse::<IntentsChain>().unwrap(), IntentsChain::Xlm);
         assert_eq!("zcash".parse::<IntentsChain>().unwrap(), IntentsChain::Zec);
-        assert_eq!(
-            "dogecoin".parse::<IntentsChain>().unwrap(),
-            IntentsChain::Doge
-        );
-        assert_eq!(
-            "cardano".parse::<IntentsChain>().unwrap(),
-            IntentsChain::Ada
-        );
-        assert_eq!(
-            "litecoin".parse::<IntentsChain>().unwrap(),
-            IntentsChain::Ltc
-        );
-        assert_eq!(
-            "ripple".parse::<IntentsChain>().unwrap(),
-            IntentsChain::Xrp
-        );
+        assert_eq!("dogecoin".parse::<IntentsChain>().unwrap(), IntentsChain::Doge);
+        assert_eq!("cardano".parse::<IntentsChain>().unwrap(), IntentsChain::Ada);
+        assert_eq!("litecoin".parse::<IntentsChain>().unwrap(), IntentsChain::Ltc);
+        assert_eq!("ripple".parse::<IntentsChain>().unwrap(), IntentsChain::Xrp);
     }
 
     #[test]
@@ -424,9 +398,7 @@ mod tests {
 
     #[test]
     fn bridge_status_pending_round_trip() {
-        let status = BridgeStatus::Pending {
-            intent_id: "intent-123".into(),
-        };
+        let status = BridgeStatus::Pending { intent_id: "intent-123".into() };
         let json = serde_json::to_string(&status).unwrap();
         let parsed: BridgeStatus = serde_json::from_str(&json).unwrap();
         assert_eq!(status, parsed);
@@ -467,9 +439,7 @@ mod tests {
 
     #[test]
     fn bridge_status_expired_round_trip() {
-        let status = BridgeStatus::Expired {
-            intent_id: "intent-123".into(),
-        };
+        let status = BridgeStatus::Expired { intent_id: "intent-123".into() };
         let json = serde_json::to_string(&status).unwrap();
         let parsed: BridgeStatus = serde_json::from_str(&json).unwrap();
         assert_eq!(status, parsed);
@@ -477,9 +447,7 @@ mod tests {
 
     #[test]
     fn bridge_status_json_format() {
-        let status = BridgeStatus::Pending {
-            intent_id: "abc".into(),
-        };
+        let status = BridgeStatus::Pending { intent_id: "abc".into() };
         let value = serde_json::to_value(&status).unwrap();
         assert_eq!(value["status"], "Pending");
         assert_eq!(value["intent_id"], "abc");

@@ -1,9 +1,9 @@
 //! Transaction inspection commands.
 
-use clap::Subcommand;
+use super::GlobalOpts;
 use crate::error::CliError;
 use crate::near::rpc::NearRpcClient;
-use super::GlobalOpts;
+use clap::Subcommand;
 
 /// Transaction subcommands.
 #[derive(Subcommand, Debug)]
@@ -26,9 +26,11 @@ impl TxCommand {
                 let config = crate::config::Config::load()?;
                 let profile = super::markets::resolve_profile_pub(&config, opts)?;
                 let rpc = crate::near::rpc::RpcClient::new(opts.effective_rpc_url(profile));
-                let hash: near_primitives::hash::CryptoHash = tx_hash.parse()
-                    .map_err(|_| CliError::InvalidInput(format!("invalid transaction hash: {tx_hash}")))?;
-                let sender: near_primitives::types::AccountId = signer.parse()
+                let hash: near_primitives::hash::CryptoHash = tx_hash.parse().map_err(|_| {
+                    CliError::InvalidInput(format!("invalid transaction hash: {tx_hash}"))
+                })?;
+                let sender: near_primitives::types::AccountId = signer
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid signer ID: {e}")))?;
                 let outcome = rpc.tx_status(hash, &sender).await?;
                 if opts.json_output() {

@@ -93,23 +93,19 @@ fn print_welcome(theme: &Theme, term: &Term) {
     ));
     let _ = term.write_line(&format!(
         "{}",
-        theme
-            .warm_grey
-            .apply_to("  Documentation: https://templar.finance/docs")
+        theme.warm_grey.apply_to("  Documentation: https://templar.finance/docs")
     ));
     let _ = term.write_line("");
 }
 
 /// Determine the current terminal width, falling back to 80.
 fn terminal_width(term: &Term) -> u16 {
-    term.size_checked()
-        .map(|(_, w)| w)
-        .unwrap_or(80)
+    term.size_checked().map_or(80, |(_, w)| w)
 }
 
 /// Returns `true` if this appears to be the first invocation (no marker file).
 fn is_first_run() -> bool {
-    marker_path().map_or(true, |p| !p.exists())
+    marker_path().is_none_or(|p| !p.exists())
 }
 
 /// Record that the first run has completed.

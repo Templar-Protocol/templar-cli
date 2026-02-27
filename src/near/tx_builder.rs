@@ -5,7 +5,7 @@
 //!
 //! ## Gas conventions
 //!
-//! - Default gas per function call: 100 TGas (100 * 10^12).
+//! - Default gas per function call: 100 `TGas` (100 * 10^12).
 //! - The builder allows overriding gas per action.
 //!
 //! ## Deposit conventions
@@ -24,13 +24,13 @@ use crate::error::CliError;
 // Gas constants
 // ---------------------------------------------------------------------------
 
-/// 1 TGas = 10^12 gas units.
+/// 1 `TGas` = 10^12 gas units.
 pub const TGAS: u64 = 1_000_000_000_000;
 
-/// Default gas attached to each function call: 100 TGas.
+/// Default gas attached to each function call: 100 `TGas`.
 pub const DEFAULT_GAS: u64 = 100 * TGAS;
 
-/// Maximum gas per transaction (300 TGas).
+/// Maximum gas per transaction (300 `TGas`).
 pub const MAX_GAS: u64 = 300 * TGAS;
 
 // ---------------------------------------------------------------------------
@@ -93,11 +93,7 @@ impl TransactionBuilder {
     /// * `signer_id` — the account signing and paying for the transaction.
     /// * `receiver_id` — the contract account receiving the call(s).
     pub fn new(signer_id: AccountId, receiver_id: AccountId) -> Self {
-        Self {
-            signer_id,
-            receiver_id,
-            actions: Vec::new(),
-        }
+        Self { signer_id, receiver_id, actions: Vec::new() }
     }
 
     /// Add a function-call action with explicit gas and deposit.
@@ -161,9 +157,7 @@ impl TransactionBuilder {
         block_hash: CryptoHash,
     ) -> Result<Transaction, CliError> {
         if self.actions.is_empty() {
-            return Err(CliError::InvalidInput(
-                "transaction must have at least one action".into(),
-            ));
+            return Err(CliError::InvalidInput("transaction must have at least one action".into()));
         }
 
         let total_gas = self.total_gas();
@@ -280,9 +274,7 @@ mod tests {
     use super::*;
 
     fn test_public_key() -> near_crypto::PublicKey {
-        "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp"
-            .parse()
-            .unwrap()
+        "ed25519:6E8sCci9badyRkXb3JoRpBj5p8C6Tw41ELDZoiihKEtp".parse().unwrap()
     }
 
     fn test_block_hash() -> CryptoHash {
@@ -428,10 +420,7 @@ mod tests {
     #[test]
     fn parse_near_full_precision() {
         // 1 yoctoNEAR
-        assert_eq!(
-            parse_near("0.000000000000000000000001").unwrap(),
-            1
-        );
+        assert_eq!(parse_near("0.000000000000000000000001").unwrap(), 1);
     }
 
     #[test]
@@ -461,9 +450,7 @@ mod tests {
         struct Args {
             account_id: String,
         }
-        let args = Args {
-            account_id: "alice.near".into(),
-        };
+        let args = Args { account_id: "alice.near".into() };
         let bytes = json_args(&args).unwrap();
         let parsed: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(parsed["account_id"], "alice.near");
@@ -479,8 +466,8 @@ mod tests {
     #[test]
     fn storage_deposit_amount_reasonable() {
         // 0.00125 NEAR
-        assert!(STORAGE_DEPOSIT_AMOUNT > 0);
-        assert!(STORAGE_DEPOSIT_AMOUNT < ONE_NEAR);
+        const { assert!(STORAGE_DEPOSIT_AMOUNT > 0) };
+        const { assert!(STORAGE_DEPOSIT_AMOUNT < ONE_NEAR) };
     }
 
     #[test]

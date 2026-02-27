@@ -109,10 +109,7 @@ mod tests {
         let pos = sample_borrow_position();
         let value = serde_json::to_value(&pos).unwrap();
         assert_eq!(value["started_at_block_timestamp_ms"], "1700000000000");
-        assert_eq!(
-            value["collateral_asset_deposit"],
-            "10000000000000000000000000"
-        );
+        assert_eq!(value["collateral_asset_deposit"], "10000000000000000000000000");
         assert_eq!(value["borrow_asset_principal"], "5000000");
         assert_eq!(value["interest"], "1.000000001");
         assert_eq!(value["fees"], "1000");
@@ -197,10 +194,7 @@ mod tests {
 
     #[test]
     fn liquidation_reason_round_trip() {
-        for reason in [
-            LiquidationReason::Undercollateralization,
-            LiquidationReason::Expiration,
-        ] {
+        for reason in [LiquidationReason::Undercollateralization, LiquidationReason::Expiration] {
             let json = serde_json::to_string(&reason).unwrap();
             let parsed: LiquidationReason = serde_json::from_str(&json).unwrap();
             assert_eq!(reason, parsed);

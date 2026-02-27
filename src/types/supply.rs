@@ -166,10 +166,7 @@ mod tests {
                     amount: U128(1_000_000),
                     activation_timestamp_ms: Some(U64(1_700_000_000_000)),
                 },
-                IncomingDeposit {
-                    amount: U128(2_000_000),
-                    activation_timestamp_ms: None,
-                },
+                IncomingDeposit { amount: U128(2_000_000), activation_timestamp_ms: None },
             ],
             outgoing: U128(100_000),
         };
@@ -202,9 +199,7 @@ mod tests {
 
     #[test]
     fn withdrawal_status_ready_round_trip() {
-        let status = WithdrawalRequestStatus::Ready {
-            amount: U128(1_000_000),
-        };
+        let status = WithdrawalRequestStatus::Ready { amount: U128(1_000_000) };
         let json = serde_json::to_string(&status).unwrap();
         let parsed: WithdrawalRequestStatus = serde_json::from_str(&json).unwrap();
         assert_eq!(status, parsed);
@@ -231,10 +226,7 @@ mod tests {
 
     #[test]
     fn withdrawal_status_json_format() {
-        let status = WithdrawalRequestStatus::Pending {
-            amount: U128(5000),
-            requested_at_ms: None,
-        };
+        let status = WithdrawalRequestStatus::Pending { amount: U128(5000), requested_at_ms: None };
         let value = serde_json::to_value(&status).unwrap();
         assert_eq!(value["status"], "Pending");
         assert_eq!(value["amount"], "5000");

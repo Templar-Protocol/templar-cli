@@ -47,9 +47,10 @@ impl TemplarPalette {
 // ---------------------------------------------------------------------------
 
 /// Controls the copy style used in user-facing messages.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Voice {
     /// Themed cypherpunk copy -- evocative, branded language.
+    #[default]
     Cypherpunk,
     /// Neutral, plain-English copy.
     Standard,
@@ -64,12 +65,6 @@ impl Voice {
             "standard" | "plain" | "neutral" => Self::Standard,
             _ => Self::Cypherpunk,
         }
-    }
-}
-
-impl Default for Voice {
-    fn default() -> Self {
-        Self::Cypherpunk
     }
 }
 
@@ -91,7 +86,7 @@ pub enum ColorMode {
 impl ColorMode {
     /// Resolve from the `--color` flag value. `None` means `auto`.
     pub fn from_flag(flag: Option<&str>) -> Self {
-        match flag.map(|s| s.to_ascii_lowercase()).as_deref() {
+        match flag.map(str::to_ascii_lowercase).as_deref() {
             Some("always" | "yes" | "true") => Self::Always,
             Some("never" | "no" | "false") => Self::Never,
             _ => Self::Auto,
@@ -244,11 +239,7 @@ impl Theme {
 
     /// Format a warning message.
     pub fn fmt_warn(&self, msg: &str) -> String {
-        format!(
-            "{} {}",
-            self.antique_gold.apply_to("\u{26A0}"),
-            msg
-        )
+        format!("{} {}", self.antique_gold.apply_to("\u{26A0}"), msg)
     }
 }
 
@@ -382,7 +373,11 @@ mod tests {
         assert_eq!(TemplarPalette::ANTIQUE_GOLD, 136, "ANTIQUE_GOLD should be ANSI-256 index 136");
         assert_eq!(TemplarPalette::IVORY, 253, "IVORY should be ANSI-256 index 253");
         assert_eq!(TemplarPalette::WARM_GREY, 144, "WARM_GREY should be ANSI-256 index 144");
-        assert_eq!(TemplarPalette::CIPHER_PURPLE, 134, "CIPHER_PURPLE should be ANSI-256 index 134");
+        assert_eq!(
+            TemplarPalette::CIPHER_PURPLE,
+            134,
+            "CIPHER_PURPLE should be ANSI-256 index 134"
+        );
         assert_eq!(TemplarPalette::SUCCESS_GREEN, 77, "SUCCESS_GREEN should be ANSI-256 index 77");
         assert_eq!(TemplarPalette::DANGER_RED, 160, "DANGER_RED should be ANSI-256 index 160");
         assert_eq!(TemplarPalette::INFO_TEAL, 37, "INFO_TEAL should be ANSI-256 index 37");

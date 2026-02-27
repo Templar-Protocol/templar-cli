@@ -40,13 +40,9 @@ pub struct HermesPrice {
 impl PythClient {
     /// Create a new Pyth client.
     pub fn new(hermes_url: &str) -> Result<Self, CliError> {
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(10))
-            .build()?;
-        Ok(Self {
-            client,
-            base_url: hermes_url.trim_end_matches('/').to_string(),
-        })
+        let client =
+            reqwest::Client::builder().timeout(std::time::Duration::from_secs(10)).build()?;
+        Ok(Self { client, base_url: hermes_url.trim_end_matches('/').to_string() })
     }
 
     /// Fetch latest prices for the given price feed IDs.

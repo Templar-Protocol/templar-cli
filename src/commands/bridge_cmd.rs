@@ -1,8 +1,8 @@
 //! Cross-chain bridge operations.
 
-use clap::Subcommand;
-use crate::error::CliError;
 use super::GlobalOpts;
+use crate::error::CliError;
+use clap::Subcommand;
 
 /// Bridge subcommands.
 #[derive(Subcommand, Debug)]

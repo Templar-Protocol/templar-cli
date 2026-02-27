@@ -6,7 +6,7 @@
 
 /// Top-level error type for the Templar CLI.
 ///
-/// Each variant represents a distinct failure domain. The [`Display`]
+/// Each variant represents a distinct failure domain. The `Display`
 /// implementation produces human-readable messages suitable for terminal output.
 #[derive(Debug, thiserror::Error)]
 pub enum CliError {
@@ -97,7 +97,6 @@ impl CliError {
         matches!(self, Self::Rpc(_) | Self::Http(_))
     }
 }
-
 
 #[cfg(test)]
 mod tests {

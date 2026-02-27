@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use clap::Subcommand;
+use super::GlobalOpts;
 use crate::error::CliError;
 use crate::near::rpc::NearRpcClient;
-use super::GlobalOpts;
+use clap::Subcommand;
 
 /// Market subcommands.
 #[derive(Subcommand, Debug)]
@@ -42,7 +42,10 @@ pub enum MarketsCommand {
     },
 }
 
-fn make_rpc(profile: &crate::config::profile::Profile, opts: &GlobalOpts) -> Arc<dyn NearRpcClient> {
+fn make_rpc(
+    profile: &crate::config::profile::Profile,
+    opts: &GlobalOpts,
+) -> Arc<dyn NearRpcClient> {
     Arc::new(crate::near::rpc::RpcClient::new(opts.effective_rpc_url(profile)))
 }
 
@@ -57,10 +60,13 @@ impl MarketsCommand {
                 println!("Querying markets from registry...");
                 let rpc = make_rpc(profile, opts);
                 for registry_id in &profile.registry_contract_ids {
-                    let reg_account = registry_id.parse()
+                    let reg_account = registry_id
+                        .parse()
                         .map_err(|e| CliError::InvalidInput(format!("invalid registry ID: {e}")))?;
                     let client = crate::near::contract::registry::RegistryClient::new(
-                        rpc.clone(), reg_account, None,
+                        rpc.clone(),
+                        reg_account,
+                        None,
                     );
                     let deployments = client.list_deployments(0, 100).await?;
                     for dep in &deployments {
@@ -73,11 +79,11 @@ impl MarketsCommand {
             }
             Self::Show { market_id } => {
                 let rpc = make_rpc(profile, opts);
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let market_config = client.get_configuration().await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&market_config)?);
@@ -90,11 +96,11 @@ impl MarketsCommand {
             }
             Self::Snapshot { market_id } => {
                 let rpc = make_rpc(profile, opts);
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let snapshot = client.get_current_snapshot().await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&snapshot)?);
@@ -107,11 +113,11 @@ impl MarketsCommand {
             }
             Self::Snapshots { market_id, count } => {
                 let rpc = make_rpc(profile, opts);
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let snapshots = client.list_finalized_snapshots(0, *count).await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&snapshots)?);
@@ -126,11 +132,11 @@ impl MarketsCommand {
             }
             Self::Metrics { market_id } => {
                 let rpc = make_rpc(profile, opts);
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let metrics = client.get_borrow_asset_metrics().await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&metrics)?);
@@ -142,11 +148,11 @@ impl MarketsCommand {
             }
             Self::YieldRate { market_id } => {
                 let rpc = make_rpc(profile, opts);
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let rate = client.get_last_yield_rate().await?;
                 println!("  Yield rate: {rate}");
                 Ok(())
@@ -168,7 +174,9 @@ fn resolve_profile<'a>(
     opts: &GlobalOpts,
 ) -> Result<&'a crate::config::profile::Profile, CliError> {
     if let Some(ref name) = opts.profile {
-        config.profiles.get(name)
+        config
+            .profiles
+            .get(name)
             .ok_or_else(|| CliError::Config(format!("profile '{name}' not found")))
     } else {
         config.active_profile()

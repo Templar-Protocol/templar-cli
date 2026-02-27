@@ -33,8 +33,8 @@ pub mod vault;
 
 // Numeric primitives
 pub use number::{
-    Accumulator, BorrowAssetAmount, CollateralAssetAmount, Decimal, FungibleAsset, U128,
-    U128String, U64,
+    Accumulator, BorrowAssetAmount, CollateralAssetAmount, Decimal, FungibleAsset, U128String,
+    U128, U64,
 };
 
 // Market

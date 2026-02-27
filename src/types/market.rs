@@ -192,12 +192,8 @@ mod tests {
 
     fn sample_market_config() -> MarketConfiguration {
         MarketConfiguration {
-            borrow_asset: FungibleAsset::Nep141 {
-                account_id: "usdc.near".into(),
-            },
-            collateral_asset: FungibleAsset::Nep141 {
-                account_id: "wrap.near".into(),
-            },
+            borrow_asset: FungibleAsset::Nep141 { account_id: "usdc.near".into() },
+            collateral_asset: FungibleAsset::Nep141 { account_id: "wrap.near".into() },
             borrow_mcr_maintenance: Decimal::new("1.5"),
             borrow_mcr_liquidation: Decimal::new("1.2"),
             borrow_asset_maximum_usage_ratio: Decimal::new("0.8"),
@@ -283,9 +279,7 @@ mod tests {
                 contract_id: "multi.near".into(),
                 token_id: "usdc-1".into(),
             },
-            collateral_asset: FungibleAsset::Nep141 {
-                account_id: "wrap.near".into(),
-            },
+            collateral_asset: FungibleAsset::Nep141 { account_id: "wrap.near".into() },
             borrow_mcr_maintenance: Decimal::new("1.5"),
             borrow_mcr_liquidation: Decimal::new("1.2"),
             borrow_asset_maximum_usage_ratio: Decimal::new("0.8"),

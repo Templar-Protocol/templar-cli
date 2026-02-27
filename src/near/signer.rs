@@ -69,17 +69,11 @@ impl NearSigner {
     /// Load credentials from a specific JSON key file.
     pub fn from_key_file(path: &Path) -> Result<Self, CliError> {
         let contents = std::fs::read_to_string(path).map_err(|e| {
-            CliError::Signing(format!(
-                "cannot read key file {}: {e}",
-                path.display()
-            ))
+            CliError::Signing(format!("cannot read key file {}: {e}", path.display()))
         })?;
 
         let key_file: NearKeyFile = serde_json::from_str(&contents).map_err(|e| {
-            CliError::Signing(format!(
-                "invalid key file format in {}: {e}",
-                path.display()
-            ))
+            CliError::Signing(format!("invalid key file format in {}: {e}", path.display()))
         })?;
 
         Self::from_key_file_data(&key_file)
@@ -88,15 +82,13 @@ impl NearSigner {
     /// Construct a signer from parsed key file data.
     pub fn from_key_file_data(key_file: &NearKeyFile) -> Result<Self, CliError> {
         let account_id: AccountId = key_file.account_id.parse().map_err(|e| {
-            CliError::Signing(format!(
-                "invalid account_id '{}': {e}",
-                key_file.account_id
-            ))
+            CliError::Signing(format!("invalid account_id '{}': {e}", key_file.account_id))
         })?;
 
-        let secret_key: SecretKey = key_file.private_key.parse().map_err(|e| {
-            CliError::Signing(format!("invalid private_key: {e}"))
-        })?;
+        let secret_key: SecretKey = key_file
+            .private_key
+            .parse()
+            .map_err(|e| CliError::Signing(format!("invalid private_key: {e}")))?;
 
         Ok(Self::new(account_id, secret_key))
     }
@@ -155,8 +147,8 @@ impl NearSigner {
 
     /// Sign a transaction, producing a [`SignedTransaction`].
     ///
-    /// The transaction must already have the correct signer_id, nonce,
-    /// block_hash, and actions set (via [`TransactionBuilder`]).
+    /// The transaction must already have the correct `signer_id`, nonce,
+    /// `block_hash`, and actions set (via [`crate::near::tx_builder::TransactionBuilder`]).
     pub fn sign_transaction(&self, tx: Transaction) -> SignedTransaction {
         let hash = tx.get_hash_and_size().0;
         let signature = self.signer.sign(hash.as_ref());
@@ -210,7 +202,8 @@ mod tests {
             "account_id": "alice.testnet",
             "public_key": pk.to_string(),
             "private_key": sk.to_string()
-        }).to_string()
+        })
+        .to_string()
     }
 
     fn make_test_signer() -> NearSigner {
@@ -307,9 +300,7 @@ mod tests {
 
         // The signature should verify with the signer's public key.
         let hash = signed_tx.get_hash();
-        let valid = signed_tx
-            .signature
-            .verify(hash.as_ref(), &signer.public_key());
+        let valid = signed_tx.signature.verify(hash.as_ref(), &signer.public_key());
         assert!(valid);
     }
 
@@ -334,9 +325,7 @@ mod tests {
     fn verify_public_key_mismatch() {
         let signer = make_test_signer();
         let other_pk: PublicKey =
-            "ed25519:Hax8amLbTaTKEvjYBtcJyxcp7D8gKaKBz1XTkPHt4xwR"
-                .parse()
-                .unwrap();
+            "ed25519:Hax8amLbTaTKEvjYBtcJyxcp7D8gKaKBz1XTkPHt4xwR".parse().unwrap();
         let result = signer.verify_public_key(&other_pk);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("mismatch"));
@@ -356,9 +345,7 @@ mod tests {
     fn key_file_path_format() {
         let account_id: AccountId = "alice.testnet".parse().unwrap();
         if let Ok(path) = NearSigner::key_file_path("testnet", &account_id) {
-            assert!(path
-                .to_string_lossy()
-                .contains("testnet/alice.testnet.json"));
+            assert!(path.to_string_lossy().contains("testnet/alice.testnet.json"));
         }
     }
 

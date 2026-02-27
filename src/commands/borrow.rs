@@ -1,8 +1,8 @@
 //! Borrow operations — collateralize, take, repay, withdraw collateral.
 
-use clap::Subcommand;
-use crate::error::CliError;
 use super::GlobalOpts;
+use crate::error::CliError;
+use clap::Subcommand;
 
 /// Borrow subcommands.
 #[derive(Subcommand, Debug)]

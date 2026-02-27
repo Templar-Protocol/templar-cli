@@ -124,8 +124,7 @@ pub type OracleResponse = HashMap<PriceIdentifier, Option<PythPrice>>;
 mod tests {
     use super::*;
 
-    const SAMPLE_HEX: &str =
-        "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
+    const SAMPLE_HEX: &str = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
 
     fn sample_price_id() -> PriceIdentifier {
         PriceIdentifier::from_hex(SAMPLE_HEX).unwrap()
@@ -164,7 +163,7 @@ mod tests {
     fn price_id_round_trip() {
         let original = sample_price_id();
         let json = serde_json::to_string(&original).unwrap();
-        assert_eq!(json, format!("\"{}\"", SAMPLE_HEX));
+        assert_eq!(json, format!("\"{SAMPLE_HEX}\""));
         let parsed: PriceIdentifier = serde_json::from_str(&json).unwrap();
         assert_eq!(original, parsed);
     }
@@ -216,12 +215,8 @@ mod tests {
 
     #[test]
     fn pyth_price_negative_price() {
-        let price = PythPrice {
-            price: "-100".into(),
-            conf: "10".into(),
-            expo: -2,
-            publish_time: 0,
-        };
+        let price =
+            PythPrice { price: "-100".into(), conf: "10".into(), expo: -2, publish_time: 0 };
         assert_eq!(price.price_i64().unwrap(), -100);
         let f = price.price_f64().unwrap();
         assert!((f - (-1.0)).abs() < 1e-10);
@@ -253,7 +248,7 @@ mod tests {
 
     #[test]
     fn oracle_response_with_none_value() {
-        let json = format!("{{\"{}\":null}}", SAMPLE_HEX);
+        let json = format!("{{\"{SAMPLE_HEX}\":null}}");
         let parsed: OracleResponse = serde_json::from_str(&json).unwrap();
         let id = sample_price_id();
         assert!(parsed.contains_key(&id));

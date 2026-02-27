@@ -99,9 +99,7 @@ impl MultiTokenClient {
         contract_id: AccountId,
         signer: Option<NearSigner>,
     ) -> Self {
-        Self {
-            inner: ContractClient::new(rpc, contract_id, signer),
-        }
+        Self { inner: ContractClient::new(rpc, contract_id, signer) }
     }
 
     /// Returns the contract account ID.
@@ -122,27 +120,14 @@ impl MultiTokenClient {
         self.inner
             .view(
                 "mt_balance_of",
-                &MtBalanceOfArgs {
-                    account_id: account_id.clone(),
-                    token_id: token_id.to_string(),
-                },
+                &MtBalanceOfArgs { account_id: account_id.clone(), token_id: token_id.to_string() },
             )
             .await
     }
 
     /// Get token metadata for a specific token ID.
-    pub async fn mt_metadata(
-        &self,
-        token_id: &str,
-    ) -> Result<serde_json::Value, CliError> {
-        self.inner
-            .view(
-                "mt_metadata",
-                &MtMetadataArgs {
-                    token_id: token_id.to_string(),
-                },
-            )
-            .await
+    pub async fn mt_metadata(&self, token_id: &str) -> Result<serde_json::Value, CliError> {
+        self.inner.view("mt_metadata", &MtMetadataArgs { token_id: token_id.to_string() }).await
     }
 
     // -----------------------------------------------------------------------
@@ -181,9 +166,7 @@ impl MultiTokenClient {
 
 impl std::fmt::Debug for MultiTokenClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("MultiTokenClient")
-            .field("contract_id", self.inner.contract_id())
-            .finish()
+        f.debug_struct("MultiTokenClient").field("contract_id", self.inner.contract_id()).finish()
     }
 }
 
@@ -200,15 +183,14 @@ mod tests {
     fn mock_view_rpc(response: serde_json::Value) -> Arc<MockNearRpcClient> {
         let mut mock = MockNearRpcClient::new();
         let bytes = serde_json::to_vec(&response).unwrap();
-        mock.expect_view_function()
-            .returning(move |_, _, _| {
-                Ok(ViewCallResult {
-                    result: bytes.clone(),
-                    logs: vec![],
-                    block_height: 500,
-                    block_hash: CryptoHash::default(),
-                })
-            });
+        mock.expect_view_function().returning(move |_, _, _| {
+            Ok(ViewCallResult {
+                result: bytes.clone(),
+                logs: vec![],
+                block_height: 500,
+                block_hash: CryptoHash::default(),
+            })
+        });
         Arc::new(mock)
     }
 
@@ -222,10 +204,7 @@ mod tests {
         let rpc = mock_view_rpc(serde_json::json!("500000000"));
         let client = mt_client(rpc);
         let account_id: AccountId = "alice.near".parse().unwrap();
-        let balance = client
-            .mt_balance_of(&account_id, "nep141:wbtc.omft.near")
-            .await
-            .unwrap();
+        let balance = client.mt_balance_of(&account_id, "nep141:wbtc.omft.near").await.unwrap();
         assert_eq!(balance, "500000000");
     }
 
@@ -237,10 +216,7 @@ mod tests {
             "decimals": 8
         }));
         let client = mt_client(rpc);
-        let metadata = client
-            .mt_metadata("nep141:wbtc.omft.near")
-            .await
-            .unwrap();
+        let metadata = client.mt_metadata("nep141:wbtc.omft.near").await.unwrap();
         assert_eq!(metadata["name"], "Wrapped Bitcoin");
         assert_eq!(metadata["symbol"], "WBTC");
         assert_eq!(metadata["decimals"], 8);
@@ -341,9 +317,7 @@ mod tests {
 
     #[test]
     fn mt_metadata_args_serialize() {
-        let args = MtMetadataArgs {
-            token_id: "nep141:usdc.omft.near".to_string(),
-        };
+        let args = MtMetadataArgs { token_id: "nep141:usdc.omft.near".to_string() };
         let json = serde_json::to_value(&args).unwrap();
         assert_eq!(json["token_id"], "nep141:usdc.omft.near");
     }

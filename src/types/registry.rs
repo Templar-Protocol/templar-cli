@@ -29,19 +29,14 @@ pub struct Deployment {
 // ---------------------------------------------------------------------------
 
 /// Mode of contract deployment.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum DeployMode {
     /// Standard deployment: each contract gets its own code upload.
+    #[default]
     Normal,
 
     /// Global-hash deployment: contracts share a single code hash.
     GlobalHash,
-}
-
-impl Default for DeployMode {
-    fn default() -> Self {
-        Self::Normal
-    }
 }
 
 #[cfg(test)]
@@ -69,10 +64,7 @@ mod tests {
         let dep = sample_deployment();
         let value = serde_json::to_value(&dep).unwrap();
         assert_eq!(value["version_key"], "v1.2.0");
-        assert_eq!(
-            value["code_hash"],
-            "4uQeVj5tqViQh7yWWGStvkEG1Zmhx6uasJtWCJziofM"
-        );
+        assert_eq!(value["code_hash"], "4uQeVj5tqViQh7yWWGStvkEG1Zmhx6uasJtWCJziofM");
         // block_height is U64 so serialized as string
         assert_eq!(value["block_height"], "123456789");
     }

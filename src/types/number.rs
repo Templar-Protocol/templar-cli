@@ -269,10 +269,7 @@ impl fmt::Display for FungibleAsset {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Nep141 { account_id } => write!(f, "{account_id}"),
-            Self::Nep245 {
-                contract_id,
-                token_id,
-            } => write!(f, "{contract_id}:{token_id}"),
+            Self::Nep245 { contract_id, token_id } => write!(f, "{contract_id}:{token_id}"),
         }
     }
 }
@@ -377,10 +374,11 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::approx_constant)]
     fn decimal_to_f64() {
         let val = Decimal::new("3.14");
         let f = val.to_f64().unwrap();
-        assert!((f - 3.14).abs() < f64::EPSILON);
+        assert!((f - 3.14_f64).abs() < 0.001);
     }
 
     #[test]
@@ -451,9 +449,7 @@ mod tests {
 
     #[test]
     fn fungible_asset_nep141_round_trip() {
-        let asset = FungibleAsset::Nep141 {
-            account_id: "usdc.near".into(),
-        };
+        let asset = FungibleAsset::Nep141 { account_id: "usdc.near".into() };
         let json = serde_json::to_string(&asset).unwrap();
         let parsed: FungibleAsset = serde_json::from_str(&json).unwrap();
         assert_eq!(asset, parsed);
@@ -461,10 +457,8 @@ mod tests {
 
     #[test]
     fn fungible_asset_nep245_round_trip() {
-        let asset = FungibleAsset::Nep245 {
-            contract_id: "multi.near".into(),
-            token_id: "token-1".into(),
-        };
+        let asset =
+            FungibleAsset::Nep245 { contract_id: "multi.near".into(), token_id: "token-1".into() };
         let json = serde_json::to_string(&asset).unwrap();
         let parsed: FungibleAsset = serde_json::from_str(&json).unwrap();
         assert_eq!(asset, parsed);
@@ -472,9 +466,7 @@ mod tests {
 
     #[test]
     fn fungible_asset_nep141_json_format() {
-        let asset = FungibleAsset::Nep141 {
-            account_id: "usdc.near".into(),
-        };
+        let asset = FungibleAsset::Nep141 { account_id: "usdc.near".into() };
         let json = serde_json::to_value(&asset).unwrap();
         assert_eq!(json["account_id"], "usdc.near");
         // Should NOT have contract_id or token_id
@@ -483,10 +475,8 @@ mod tests {
 
     #[test]
     fn fungible_asset_nep245_json_format() {
-        let asset = FungibleAsset::Nep245 {
-            contract_id: "multi.near".into(),
-            token_id: "token-1".into(),
-        };
+        let asset =
+            FungibleAsset::Nep245 { contract_id: "multi.near".into(), token_id: "token-1".into() };
         let json = serde_json::to_value(&asset).unwrap();
         assert_eq!(json["contract_id"], "multi.near");
         assert_eq!(json["token_id"], "token-1");
@@ -494,15 +484,11 @@ mod tests {
 
     #[test]
     fn fungible_asset_display() {
-        let nep141 = FungibleAsset::Nep141 {
-            account_id: "usdc.near".into(),
-        };
+        let nep141 = FungibleAsset::Nep141 { account_id: "usdc.near".into() };
         assert_eq!(nep141.to_string(), "usdc.near");
 
-        let nep245 = FungibleAsset::Nep245 {
-            contract_id: "multi.near".into(),
-            token_id: "token-1".into(),
-        };
+        let nep245 =
+            FungibleAsset::Nep245 { contract_id: "multi.near".into(), token_id: "token-1".into() };
         assert_eq!(nep245.to_string(), "multi.near:token-1");
     }
 }

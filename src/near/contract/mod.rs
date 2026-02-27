@@ -63,11 +63,7 @@ impl ContractClient {
         contract_id: AccountId,
         signer: Option<NearSigner>,
     ) -> Self {
-        Self {
-            rpc,
-            contract_id,
-            signer,
-        }
+        Self { rpc, contract_id, signer }
     }
 
     /// The contract account ID this client targets.
@@ -87,10 +83,7 @@ impl ContractClient {
         R: DeserializeOwned,
     {
         let args_bytes = tx_builder::json_args(args)?;
-        let result = self
-            .rpc
-            .view_function(&self.contract_id, method_name, args_bytes)
-            .await?;
+        let result = self.rpc.view_function(&self.contract_id, method_name, args_bytes).await?;
         result.json()
     }
 
@@ -99,10 +92,7 @@ impl ContractClient {
     where
         R: DeserializeOwned,
     {
-        let result = self
-            .rpc
-            .view_function(&self.contract_id, method_name, args)
-            .await?;
+        let result = self.rpc.view_function(&self.contract_id, method_name, args).await?;
         result.json()
     }
 
@@ -127,10 +117,7 @@ impl ContractClient {
         let signer = self.require_signer()?;
         let args_bytes = tx_builder::json_args(args)?;
 
-        let ak = self
-            .rpc
-            .access_key(signer.account_id(), &signer.public_key())
-            .await?;
+        let ak = self.rpc.access_key(signer.account_id(), &signer.public_key()).await?;
 
         let tx = TransactionBuilder::new(signer.account_id().clone(), self.contract_id.clone())
             .function_call(method_name, args_bytes, gas, deposit)
@@ -149,8 +136,7 @@ impl ContractClient {
     where
         A: Serialize + Send + Sync,
     {
-        self.call(method_name, args, tx_builder::DEFAULT_GAS, tx_builder::ONE_YOCTO)
-            .await
+        self.call(method_name, args, tx_builder::DEFAULT_GAS, tx_builder::ONE_YOCTO).await
     }
 
     /// Execute a signed function call with default gas and zero deposit.
@@ -162,8 +148,7 @@ impl ContractClient {
     where
         A: Serialize + Send + Sync,
     {
-        self.call(method_name, args, tx_builder::DEFAULT_GAS, tx_builder::ZERO_DEPOSIT)
-            .await
+        self.call(method_name, args, tx_builder::DEFAULT_GAS, tx_builder::ZERO_DEPOSIT).await
     }
 
     /// Get the signer or return an error if none is configured.
@@ -244,8 +229,7 @@ mod tests {
         let contract_id: AccountId = "contract.near".parse().unwrap();
         let client = ContractClient::new(rpc, contract_id, None);
 
-        let result: serde_json::Value =
-            client.view_raw("get_info", b"{}".to_vec()).await.unwrap();
+        let result: serde_json::Value = client.view_raw("get_info", b"{}".to_vec()).await.unwrap();
         assert_eq!(result["status"], "ok");
     }
 
@@ -257,9 +241,7 @@ mod tests {
 
         #[derive(serde::Serialize)]
         struct Args {}
-        let result = client
-            .call("do_thing", &Args {}, tx_builder::DEFAULT_GAS, 0)
-            .await;
+        let result = client.call("do_thing", &Args {}, tx_builder::DEFAULT_GAS, 0).await;
 
         assert!(result.is_err());
         let err = result.unwrap_err();

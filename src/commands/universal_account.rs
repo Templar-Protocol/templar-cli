@@ -1,8 +1,8 @@
 //! Universal Account operations.
 
-use clap::Subcommand;
-use crate::error::CliError;
 use super::GlobalOpts;
+use crate::error::CliError;
+use clap::Subcommand;
 
 /// Universal Account subcommands.
 #[derive(Subcommand, Debug)]

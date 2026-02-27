@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use clap::Subcommand;
+use super::GlobalOpts;
 use crate::error::CliError;
 use crate::near::rpc::NearRpcClient;
-use super::GlobalOpts;
+use clap::Subcommand;
 
 /// Account subcommands.
 #[derive(Subcommand, Debug)]
@@ -80,19 +80,19 @@ impl AccountCommand {
     pub async fn run(&self, opts: &GlobalOpts) -> Result<(), CliError> {
         let config = crate::config::Config::load()?;
         let profile = super::markets::resolve_profile_pub(&config, opts)?;
-        let rpc: Arc<dyn NearRpcClient> = Arc::new(
-            crate::near::rpc::RpcClient::new(opts.effective_rpc_url(profile)),
-        );
+        let rpc: Arc<dyn NearRpcClient> =
+            Arc::new(crate::near::rpc::RpcClient::new(opts.effective_rpc_url(profile)));
 
         match self {
             Self::Supply { market_id, account_id } => {
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let near_account = account_id.parse()
+                let near_account = account_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid account ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let position = client.get_supply_position(&near_account).await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&position)?);
@@ -105,13 +105,14 @@ impl AccountCommand {
                 Ok(())
             }
             Self::Borrow { market_id, account_id } => {
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let near_account = account_id.parse()
+                let near_account = account_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid account ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let position = client.get_borrow_position(&near_account).await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&position)?);
@@ -124,13 +125,14 @@ impl AccountCommand {
                 Ok(())
             }
             Self::Health { market_id, account_id } => {
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let near_account = account_id.parse()
+                let near_account = account_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid account ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let status = client.get_borrow_status(&near_account).await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&status)?);
@@ -141,13 +143,14 @@ impl AccountCommand {
                 Ok(())
             }
             Self::PendingInterest { market_id, account_id } => {
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let near_account = account_id.parse()
+                let near_account = account_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid account ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let interest = client.get_borrow_position_pending_interest(&near_account).await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&interest)?);
@@ -158,13 +161,14 @@ impl AccountCommand {
                 Ok(())
             }
             Self::PendingYield { market_id, account_id } => {
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let near_account = account_id.parse()
+                let near_account = account_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid account ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let yield_info = client.get_supply_position_pending_yield(&near_account).await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&yield_info)?);
@@ -175,13 +179,14 @@ impl AccountCommand {
                 Ok(())
             }
             Self::WithdrawalStatus { market_id, account_id } => {
-                let market_account = market_id.parse()
+                let market_account = market_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid market ID: {e}")))?;
-                let near_account = account_id.parse()
+                let near_account = account_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid account ID: {e}")))?;
-                let client = crate::near::contract::market::MarketClient::new(
-                    rpc, market_account, None,
-                );
+                let client =
+                    crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let status = client.get_supply_withdrawal_request_status(&near_account).await?;
                 if opts.json_output() {
                     println!("{}", serde_json::to_string_pretty(&status)?);
@@ -192,24 +197,29 @@ impl AccountCommand {
                 Ok(())
             }
             Self::Balance { token_id, account_id } => {
-                let token_account: near_primitives::types::AccountId = token_id.parse()
+                let token_account: near_primitives::types::AccountId = token_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid token ID: {e}")))?;
-                let near_account: near_primitives::types::AccountId = account_id.parse()
+                let near_account: near_primitives::types::AccountId = account_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid account ID: {e}")))?;
-                let client = crate::near::contract::token::TokenClient::new(
-                    rpc, token_account, None,
-                );
+                let client =
+                    crate::near::contract::token::TokenClient::new(rpc, token_account, None);
                 let balance = client.ft_balance_of(&near_account).await?;
                 println!("  Balance: {balance}");
                 Ok(())
             }
             Self::MtBalance { contract_id, token_id, account_id } => {
-                let contract_account: near_primitives::types::AccountId = contract_id.parse()
+                let contract_account: near_primitives::types::AccountId = contract_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid contract ID: {e}")))?;
-                let near_account: near_primitives::types::AccountId = account_id.parse()
+                let near_account: near_primitives::types::AccountId = account_id
+                    .parse()
                     .map_err(|e| CliError::InvalidInput(format!("invalid account ID: {e}")))?;
                 let client = crate::near::contract::multi_token::MultiTokenClient::new(
-                    rpc, contract_account, None,
+                    rpc,
+                    contract_account,
+                    None,
                 );
                 let balance = client.mt_balance_of(&near_account, token_id).await?;
                 println!("  Balance: {balance}");
