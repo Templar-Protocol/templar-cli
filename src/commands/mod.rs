@@ -82,7 +82,7 @@ pub struct GlobalOpts {
 impl GlobalOpts {
     /// Returns true if JSON output mode is requested.
     pub fn json_output(&self) -> bool {
-        self.output.as_deref() == Some("json")
+        self.output.as_deref().is_some_and(|v| v.eq_ignore_ascii_case("json"))
     }
 
     /// Returns true if color is explicitly disabled.

@@ -62,7 +62,7 @@ pub struct WithdrawCollateralArgs {
 }
 
 /// Token-action message formats for `ft_transfer_call` / `mt_transfer_call`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MarketTokenAction {
     /// Supply tokens to the market.
     Supply,
@@ -80,14 +80,7 @@ pub enum MarketTokenAction {
 impl MarketTokenAction {
     /// Encode the action as the JSON `msg` string for `ft_transfer_call`.
     pub fn to_msg(&self) -> String {
-        match self {
-            Self::Supply => "\"Supply\"".to_string(),
-            Self::Collateralize => "\"Collateralize\"".to_string(),
-            Self::Repay => "\"Repay\"".to_string(),
-            Self::Liquidate { account_id } => {
-                format!("{{\"Liquidate\":{{\"account_id\":\"{account_id}\"}}}}")
-            }
-        }
+        serde_json::to_string(self).expect("MarketTokenAction is always serializable")
     }
 }
 

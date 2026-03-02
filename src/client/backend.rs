@@ -61,15 +61,27 @@ impl BackendClient {
 
     /// Check backend health.
     pub async fn health(&self) -> Result<HealthResponse, CliError> {
-        let resp =
-            self.client.get(format!("{}/v1/health", self.base_url)).send().await?.json().await?;
+        let resp = self
+            .client
+            .get(format!("{}/v1/health", self.base_url))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
         Ok(resp)
     }
 
     /// List all markets.
     pub async fn list_markets(&self) -> Result<Vec<MarketSummary>, CliError> {
-        let resp =
-            self.client.get(format!("{}/v1/markets", self.base_url)).send().await?.json().await?;
+        let resp = self
+            .client
+            .get(format!("{}/v1/markets", self.base_url))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
         Ok(resp)
     }
 
@@ -80,6 +92,7 @@ impl BackendClient {
             .get(format!("{}/v1/markets/{market_id}", self.base_url))
             .send()
             .await?
+            .error_for_status()?
             .json()
             .await?;
         Ok(resp)
@@ -94,6 +107,7 @@ impl BackendClient {
             .query(&[("assetIds", ids)])
             .send()
             .await?
+            .error_for_status()?
             .json()
             .await?;
         Ok(resp)

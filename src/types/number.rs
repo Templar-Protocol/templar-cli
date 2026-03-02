@@ -248,20 +248,26 @@ impl fmt::Display for Accumulator {
 // ---------------------------------------------------------------------------
 
 /// A fungible asset identifier, either NEP-141 or NEP-245.
+///
+/// **Variant order matters**: `Nep245` must come before `Nep141` because serde
+/// tries untagged variants in declaration order. `Nep245` has two required
+/// fields (`contract_id` + `token_id`) while `Nep141` only requires
+/// `account_id`, so JSON with both fields would incorrectly match `Nep141`
+/// if it came first.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum FungibleAsset {
-    /// A standard NEP-141 fungible token.
-    Nep141 {
-        /// The token contract account ID.
-        account_id: String,
-    },
     /// A NEP-245 multi-token.
     Nep245 {
         /// The multi-token contract account ID.
         contract_id: String,
         /// The token ID within the multi-token contract.
         token_id: String,
+    },
+    /// A standard NEP-141 fungible token.
+    Nep141 {
+        /// The token contract account ID.
+        account_id: String,
     },
 }
 

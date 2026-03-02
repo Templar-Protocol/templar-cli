@@ -63,17 +63,10 @@ pub enum BorrowCommand {
 impl BorrowCommand {
     /// Execute the borrow command.
     pub async fn run(&self, _opts: &GlobalOpts) -> Result<(), CliError> {
-        if let Self::Take { market_id, amount, signer } = self {
-            println!("  \u{2720} Preparing borrow...");
-            println!("    Market:  {market_id}");
-            println!("    Amount:  {amount}");
-            println!("    Signer:  {signer}");
-            println!("  Borrow requires signer credentials.");
-            println!("  Use `templar config import-key` to set up signing.");
-        } else {
-            println!("  Borrow command: {self:?}");
-            println!("  Write operations require signer setup.");
-        }
-        Ok(())
+        Err(CliError::Other(
+            "borrow write operations are not yet implemented — \
+             signer integration is required (Phase 2)"
+                .into(),
+        ))
     }
 }

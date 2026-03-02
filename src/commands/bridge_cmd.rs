@@ -40,26 +40,8 @@ impl BridgeCommand {
     /// Execute the bridge command.
     pub async fn run(&self, _opts: &GlobalOpts) -> Result<(), CliError> {
         match self {
-            Self::Deposit { asset, amount } => {
-                println!("  \u{2720} Initiating cross-chain deposit...");
-                println!("    Asset:   {asset}");
-                println!("    Amount:  {amount}");
-                println!("  Bridge operations require Phase 4 implementation.");
-                Ok(())
-            }
-            Self::Withdraw { asset, amount, destination, signer } => {
-                println!("  \u{2720} Initiating cross-chain withdrawal...");
-                println!("    Asset:       {asset}");
-                println!("    Amount:      {amount}");
-                println!("    Destination: {destination}");
-                println!("    Signer:      {signer}");
-                println!("  Bridge operations require Phase 4 implementation.");
-                Ok(())
-            }
-            Self::Track { id } => {
-                println!("  Tracking bridge operation: {id}");
-                println!("  Bridge operations require Phase 4 implementation.");
-                Ok(())
+            Self::Deposit { .. } | Self::Withdraw { .. } | Self::Track { .. } => {
+                Err(CliError::Other("bridge operations are not yet implemented (Phase 4)".into()))
             }
             Self::SupportedAssets => {
                 println!("  Supported bridge assets:");

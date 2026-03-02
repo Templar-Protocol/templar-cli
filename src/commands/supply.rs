@@ -64,17 +64,10 @@ pub enum SupplyCommand {
 impl SupplyCommand {
     /// Execute the supply command.
     pub async fn run(&self, _opts: &GlobalOpts) -> Result<(), CliError> {
-        if let Self::Deposit { market_id, amount, signer } = self {
-            println!("  \u{2720} Preparing supply deposit...");
-            println!("    Market:  {market_id}");
-            println!("    Amount:  {amount}");
-            println!("    Signer:  {signer}");
-            println!("  Supply deposit requires signer credentials.");
-            println!("  Use `templar config import-key` to set up signing.");
-        } else {
-            println!("  Supply command: {self:?}");
-            println!("  Write operations require signer setup.");
-        }
-        Ok(())
+        Err(CliError::Other(
+            "supply write operations are not yet implemented — \
+             signer integration is required (Phase 2)"
+                .into(),
+        ))
     }
 }

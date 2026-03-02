@@ -106,11 +106,11 @@ impl VaultCommand {
                 println!("  Redeeming {shares} shares would yield {assets} assets");
                 Ok(())
             }
-            _ => {
-                println!("  Vault command: {self:?}");
-                println!("  Write operations require signer setup.");
-                Ok(())
-            }
+            _ => Err(CliError::Other(
+                "vault write operations are not yet implemented — \
+                 signer integration is required (Phase 2)"
+                    .into(),
+            )),
         }
     }
 }

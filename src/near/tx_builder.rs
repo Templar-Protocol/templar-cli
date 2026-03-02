@@ -130,12 +130,12 @@ impl TransactionBuilder {
 
     /// Returns the total gas required across all actions.
     pub fn total_gas(&self) -> u64 {
-        self.actions.iter().map(|a| a.gas).sum()
+        self.actions.iter().fold(0u64, |acc, a| acc.saturating_add(a.gas))
     }
 
     /// Returns the total deposit across all actions.
     pub fn total_deposit(&self) -> u128 {
-        self.actions.iter().map(|a| a.deposit).sum()
+        self.actions.iter().fold(0u128, |acc, a| acc.saturating_add(a.deposit))
     }
 
     /// Build the unsigned [`Transaction`].
@@ -231,9 +231,13 @@ pub fn parse_near(amount: &str) -> Result<u128, CliError> {
             Ok(whole * ONE_NEAR)
         }
         2 => {
-            let whole: u128 = parts[0]
-                .parse()
-                .map_err(|e| CliError::InvalidInput(format!("invalid NEAR amount: {e}")))?;
+            let whole: u128 = if parts[0].is_empty() {
+                0
+            } else {
+                parts[0]
+                    .parse()
+                    .map_err(|e| CliError::InvalidInput(format!("invalid NEAR amount: {e}")))?
+            };
 
             let frac_str = parts[1];
             if frac_str.len() > 24 {

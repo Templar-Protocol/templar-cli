@@ -360,12 +360,17 @@ mod tests {
 
     #[test]
     fn debug_does_not_leak_secret_key() {
-        let signer = make_test_signer();
+        let sk = make_test_secret_key();
+        let sk_str = sk.to_string();
+        let account_id: AccountId = "alice.testnet".parse().unwrap();
+        let signer = NearSigner::new(account_id, sk);
         let debug_str = format!("{signer:?}");
         assert!(debug_str.contains("alice.testnet"));
         assert!(debug_str.contains("ed25519:"));
         // The debug output should NOT contain the full private key.
-        assert!(!debug_str.contains("3D4YudUahN1nawWogh8pAKSj92sUNMdbZGjn7PnUKtg8"));
+        // Extract the key material after "ed25519:" prefix from the secret key.
+        let key_material = sk_str.strip_prefix("ed25519:").unwrap_or(&sk_str);
+        assert!(!debug_str.contains(key_material), "debug output leaked the secret key");
     }
 
     #[test]

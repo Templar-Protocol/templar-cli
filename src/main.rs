@@ -27,6 +27,6 @@ async fn main() {
 
     if let Err(e) = cli.run().await {
         eprintln!("{e}");
-        std::process::exit(1);
+        std::process::exit(e.exit_code());
     }
 }

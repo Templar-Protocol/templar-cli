@@ -56,8 +56,12 @@ async fn run_show(opts: &GlobalOpts) -> Result<(), CliError> {
                 .map_err(|e| CliError::Serialization(e.to_string()))?
         );
     } else {
-        println!("  Active profile: {}", config.active_profile);
-        let profile = config.active_profile()?;
+        let profile_name = opts.profile.as_deref().unwrap_or(&config.active_profile);
+        let profile = config
+            .profiles
+            .get(profile_name)
+            .ok_or_else(|| CliError::Config(format!("profile '{profile_name}' not found")))?;
+        println!("  Profile:        {profile_name}");
         println!("  NEAR RPC:       {}", opts.effective_rpc_url(profile));
         println!("  Network:        {}", opts.effective_network(profile));
         println!("  Backend:        {}", profile.backend_url);
@@ -66,9 +70,9 @@ async fn run_show(opts: &GlobalOpts) -> Result<(), CliError> {
     Ok(())
 }
 
-async fn run_set(_opts: &GlobalOpts, key: &str, value: &str) -> Result<(), CliError> {
+async fn run_set(opts: &GlobalOpts, key: &str, value: &str) -> Result<(), CliError> {
     let mut config = Config::load()?;
-    let profile_name = config.active_profile.clone();
+    let profile_name = opts.profile.clone().unwrap_or_else(|| config.active_profile.clone());
     let profile = config
         .profiles
         .get_mut(&profile_name)

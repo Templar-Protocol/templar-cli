@@ -225,11 +225,11 @@ impl AccountCommand {
                 println!("  Balance: {balance}");
                 Ok(())
             }
-            Self::Positions { account_id } => {
-                println!("  Listing positions for {account_id}...");
-                println!("  Use 'templar account supply' or 'templar account borrow' for specific positions.");
-                Ok(())
-            }
+            Self::Positions { .. } => Err(CliError::Other(
+                "aggregate position listing is not yet implemented — \
+                 use 'templar account supply' or 'templar account borrow' for specific positions"
+                    .into(),
+            )),
         }
     }
 }

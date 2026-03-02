@@ -16,7 +16,14 @@ impl PricesArgs {
     /// Execute the prices command.
     pub async fn run(&self, opts: &GlobalOpts) -> Result<(), CliError> {
         let config = crate::config::Config::load()?;
-        let profile = config.active_profile()?;
+        let profile = if let Some(ref name) = opts.profile {
+            config
+                .profiles
+                .get(name)
+                .ok_or_else(|| CliError::Config(format!("profile '{name}' not found")))?
+        } else {
+            config.active_profile()?
+        };
         let client = crate::client::pyth::PythClient::new(&profile.hermes_url)?;
         let prices = client.get_latest_prices(&self.asset_ids).await?;
 

@@ -61,6 +61,7 @@ impl PythClient {
             .query(&query_params)
             .send()
             .await?
+            .error_for_status()?
             .json()
             .await?;
 

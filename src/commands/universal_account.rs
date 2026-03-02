@@ -30,26 +30,8 @@ pub enum UaCommand {
 impl UaCommand {
     /// Execute the UA command.
     pub async fn run(&self, _opts: &GlobalOpts) -> Result<(), CliError> {
-        match self {
-            Self::Whoami => {
-                println!("  Universal Account lookup requires key configuration.");
-                println!("  Run 'templar config import-key' first.");
-                Ok(())
-            }
-            Self::ListKeys => {
-                println!("  Key listing requires Phase 3 implementation.");
-                Ok(())
-            }
-            Self::AddKey { r#type, source } => {
-                println!("  Adding {type} key from {source}...");
-                println!("  Key management requires Phase 3 implementation.");
-                Ok(())
-            }
-            Self::RemoveKey { alias } => {
-                println!("  Removing key '{alias}'...");
-                println!("  Key management requires Phase 3 implementation.");
-                Ok(())
-            }
-        }
+        Err(CliError::Other(
+            "Universal Account operations are not yet implemented (Phase 3)".into(),
+        ))
     }
 }

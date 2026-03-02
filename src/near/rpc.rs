@@ -91,7 +91,7 @@ pub fn classify_rpc_error(err_msg: &str) -> RpcErrorKind {
         RpcErrorKind::Timeout
     } else if lower.contains("connection refused") || lower.contains("connection reset") {
         RpcErrorKind::ConnectionRefused
-    } else if lower.contains("invalid nonce") || lower.contains("nonce") {
+    } else if lower.contains("invalid nonce") || lower.contains("invalidnonce") {
         RpcErrorKind::InvalidNonce
     } else if lower.contains("wasm execution failed")
         || lower.contains("smart contract panicked")
