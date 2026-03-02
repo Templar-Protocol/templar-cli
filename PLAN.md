@@ -2,7 +2,7 @@
 
 ## Overview
 
-Build `templar-cli`, a Rust CLI tool for interacting with Templar Protocol contracts and services across multiple blockchains. The CLI will support NEAR, Solana, Stellar, and EVM chains through Templar's Universal Account abstraction, and provide both direct on-chain reads and relayer-mediated write operations.
+Build `templar-cli`, a Rust CLI tool for interacting with Templar Protocol — a multichain cypher lending protocol on NEAR that lets users borrow against native BTC, ZEC, XRP, ADA, DOGE, XLM, LTC, and more without trusting centralized intermediaries. The CLI supports NEAR, EVM, Solana, Stellar, and Passkey transaction signing via Templar's Universal Account abstraction, and provides both direct on-chain reads and relayer-mediated write operations.
 
 **Cross-chain asset support**: BTC, XRP, ADA, LTC, ZEC, DOGE, SOL, XLM, ETH, and ERC-20 tokens are bridged via the **NEAR Intents** system (`bridge.chaindefuser.com`). All cross-chain assets are represented as **NEP-245 multi-tokens** within the `intents.near` verifier contract on NEAR:
 

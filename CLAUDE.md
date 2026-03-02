@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**templar-cli** is a Rust CLI for interacting with Templar Protocol — a multichain cypher lending protocol on NEAR. It supports NEAR, Solana, Stellar, and EVM chains through Templar's Universal Account abstraction, with both direct on-chain reads and relayer-mediated write operations.
+**templar-cli** is a Rust CLI for interacting with Templar Protocol — a multichain cypher lending protocol on NEAR that lets users borrow against native BTC, ZEC, XRP, ADA, DOGE, XLM, LTC, and more without trusting centralized intermediaries. It supports NEAR, EVM, Solana, Stellar, and Passkey transaction signing via Templar's Universal Account abstraction, with both direct on-chain reads and relayer-mediated write operations.
 
 This is a greenfield project. The implementation plan is in `PLAN.md`. Development follows strict TDD (Red-Green-Refactor) with a 95%+ coverage target.
 
