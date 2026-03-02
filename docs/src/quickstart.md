@@ -34,8 +34,10 @@ templar account borrow ibtc-usdc.v1.tmplr.near your-account.near
 
 ## 4. Supply to a Market
 
+> **Warning:** This is a state-changing transaction. Use `--profile testnet` or a testnet signer to avoid operating on mainnet accidentally.
+
 ```bash
-templar supply deposit ibtc-usdc.v1.tmplr.near 1000 --signer your-account.near
+templar supply deposit ibtc-usdc.v1.tmplr.near 1000 --signer your-account.testnet --profile testnet
 ```
 
 ## 5. Check Prices

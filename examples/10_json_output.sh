@@ -20,8 +20,8 @@ templar prices NEAR USDC --output json
 # Get just the market names:
 # templar markets list --output json | jq '.[].name'
 
-# Get the NEAR price as a number:
-# templar prices NEAR --output json | jq '.[0].price'
+# Get the NEAR price as a number (price field is a string, so convert it):
+# templar prices NEAR --output json | jq '.[0].price | tonumber'
 
 # Check if a borrow position is healthy:
 # templar account health "$MARKET_ID" "$ACCOUNT_ID" --output json | jq '.healthy'

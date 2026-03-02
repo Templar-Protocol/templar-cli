@@ -154,7 +154,11 @@ impl MarketsCommand {
                 let client =
                     crate::near::contract::market::MarketClient::new(rpc, market_account, None);
                 let rate = client.get_last_yield_rate().await?;
-                println!("  Yield rate: {rate}");
+                if opts.json_output() {
+                    println!("{}", serde_json::to_string_pretty(&rate)?);
+                } else {
+                    println!("  Yield rate: {rate}");
+                }
                 Ok(())
             }
         }

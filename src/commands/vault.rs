@@ -93,7 +93,18 @@ impl VaultCommand {
                 let client =
                     crate::near::contract::vault::VaultClient::new(rpc, vault_account, None);
                 let shares = client.preview_deposit(amount).await?;
-                println!("  Depositing {amount} would mint {shares} shares");
+                if opts.json_output() {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&serde_json::json!({
+                            "vault_id": vault_id,
+                            "deposit_amount": amount,
+                            "shares": shares,
+                        }))?
+                    );
+                } else {
+                    println!("  Depositing {amount} would mint {shares} shares");
+                }
                 Ok(())
             }
             Self::PreviewRedeem { vault_id, shares } => {
@@ -103,7 +114,18 @@ impl VaultCommand {
                 let client =
                     crate::near::contract::vault::VaultClient::new(rpc, vault_account, None);
                 let assets = client.preview_redeem(shares).await?;
-                println!("  Redeeming {shares} shares would yield {assets} assets");
+                if opts.json_output() {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&serde_json::json!({
+                            "vault_id": vault_id,
+                            "shares": shares,
+                            "assets": assets,
+                        }))?
+                    );
+                } else {
+                    println!("  Redeeming {shares} shares would yield {assets} assets");
+                }
                 Ok(())
             }
             _ => Err(CliError::Other(

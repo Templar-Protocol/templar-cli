@@ -18,10 +18,10 @@ cargo install --path .
 ## Requirements
 
 - Rust 1.75+ (install via [rustup](https://rustup.rs/))
-- For development: `cargo-nextest`, `mdbook`, `just`
+- For development: `cargo-nextest`, `cargo-llvm-cov`, `mdbook`, `just`
 
 ```bash
-cargo install cargo-nextest mdbook just
+cargo install cargo-nextest cargo-llvm-cov mdbook just
 ```
 
 ## Verify Installation

@@ -56,7 +56,7 @@ impl Serialize for PriceIdentifier {
 impl<'de> Deserialize<'de> for PriceIdentifier {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let s = String::deserialize(deserializer)?;
-        let hex = s.strip_prefix("0x").unwrap_or(&s);
+        let hex = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")).unwrap_or(&s);
         Self::from_hex(hex).map_err(serde::de::Error::custom)
     }
 }

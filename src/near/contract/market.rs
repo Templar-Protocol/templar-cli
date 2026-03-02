@@ -250,8 +250,23 @@ impl MarketClient {
     // Write calls
     // -----------------------------------------------------------------------
 
+    /// Validate that an amount string is non-empty, numeric, and positive.
+    fn validate_amount(amount: &str) -> Result<(), CliError> {
+        if amount.is_empty() {
+            return Err(CliError::InvalidInput("amount must not be empty".into()));
+        }
+        let parsed: u128 = amount
+            .parse()
+            .map_err(|e| CliError::InvalidInput(format!("invalid amount '{amount}': {e}")))?;
+        if parsed == 0 {
+            return Err(CliError::InvalidInput("amount must be greater than zero".into()));
+        }
+        Ok(())
+    }
+
     /// Borrow from the market.
     pub async fn borrow(&self, amount: &str) -> Result<FinalExecutionOutcomeView, CliError> {
+        Self::validate_amount(amount)?;
         self.inner
             .call("borrow", &AmountArgs { amount: amount.to_string() }, DEFAULT_GAS, ONE_YOCTO)
             .await
@@ -262,6 +277,7 @@ impl MarketClient {
         &self,
         amount: &str,
     ) -> Result<FinalExecutionOutcomeView, CliError> {
+        Self::validate_amount(amount)?;
         self.inner
             .call(
                 "withdraw_collateral",
@@ -277,6 +293,7 @@ impl MarketClient {
         &self,
         amount: &str,
     ) -> Result<FinalExecutionOutcomeView, CliError> {
+        Self::validate_amount(amount)?;
         self.inner
             .call(
                 "create_supply_withdrawal_request",

@@ -228,7 +228,9 @@ pub fn parse_near(amount: &str) -> Result<u128, CliError> {
             let whole: u128 = parts[0]
                 .parse()
                 .map_err(|e| CliError::InvalidInput(format!("invalid NEAR amount: {e}")))?;
-            Ok(whole * ONE_NEAR)
+            whole
+                .checked_mul(ONE_NEAR)
+                .ok_or_else(|| CliError::InvalidInput("NEAR amount overflow".into()))
         }
         2 => {
             let whole: u128 = if parts[0].is_empty() {
@@ -252,7 +254,10 @@ pub fn parse_near(amount: &str) -> Result<u128, CliError> {
                 .parse()
                 .map_err(|e| CliError::InvalidInput(format!("invalid NEAR fraction: {e}")))?;
 
-            Ok(whole * ONE_NEAR + frac)
+            whole
+                .checked_mul(ONE_NEAR)
+                .and_then(|w| w.checked_add(frac))
+                .ok_or_else(|| CliError::InvalidInput("NEAR amount overflow".into()))
         }
         _ => Err(CliError::InvalidInput(
             "invalid NEAR amount format (multiple decimal points)".into(),

@@ -32,8 +32,12 @@ doc:
 book:
     mdbook build docs/
 
-# Full CI check: fmt + lint + test + doc
-ci: fmt-check lint test doc book
+# Run doctests
+doctest:
+    cargo test --doc
+
+# Full CI check: fmt + lint + test + doctest + doc
+ci: fmt-check lint test doctest doc book
 
 # Clean build artifacts
 clean:

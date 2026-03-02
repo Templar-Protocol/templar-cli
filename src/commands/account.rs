@@ -206,7 +206,18 @@ impl AccountCommand {
                 let client =
                     crate::near::contract::token::TokenClient::new(rpc, token_account, None);
                 let balance = client.ft_balance_of(&near_account).await?;
-                println!("  Balance: {balance}");
+                if opts.json_output() {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&serde_json::json!({
+                            "token_id": token_id,
+                            "account_id": account_id,
+                            "balance": balance,
+                        }))?
+                    );
+                } else {
+                    println!("  Balance: {balance}");
+                }
                 Ok(())
             }
             Self::MtBalance { contract_id, token_id, account_id } => {
@@ -222,7 +233,19 @@ impl AccountCommand {
                     None,
                 );
                 let balance = client.mt_balance_of(&near_account, token_id).await?;
-                println!("  Balance: {balance}");
+                if opts.json_output() {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&serde_json::json!({
+                            "contract_id": contract_id,
+                            "token_id": token_id,
+                            "account_id": account_id,
+                            "balance": balance,
+                        }))?
+                    );
+                } else {
+                    println!("  Balance: {balance}");
+                }
                 Ok(())
             }
             Self::Positions { .. } => Err(CliError::Other(

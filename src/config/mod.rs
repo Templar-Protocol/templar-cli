@@ -173,15 +173,20 @@ pub fn create_dir_secure(path: &Path) -> Result<(), CliError> {
 }
 
 /// Write a file with mode 0o600 (Unix) or default (other platforms).
+///
+/// On Unix, permissions are enforced for both new and existing files.
 pub fn write_file_secure(path: &Path, data: &[u8]) -> Result<(), CliError> {
     #[cfg(unix)]
     {
         use std::fs::OpenOptions;
         use std::io::Write;
         use std::os::unix::fs::OpenOptionsExt;
+        use std::os::unix::fs::PermissionsExt;
         let mut file =
             OpenOptions::new().write(true).create(true).truncate(true).mode(0o600).open(path)?;
         file.write_all(data)?;
+        // Enforce 0o600 even if the file already existed with broader permissions.
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
     }
     #[cfg(not(unix))]
     {

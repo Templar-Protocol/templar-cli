@@ -80,6 +80,10 @@ impl NearSigner {
     }
 
     /// Construct a signer from parsed key file data.
+    ///
+    /// If the key file contains a `public_key` field, it is validated against
+    /// the public key derived from the secret key. This catches tampered or
+    /// mismatched key files early.
     pub fn from_key_file_data(key_file: &NearKeyFile) -> Result<Self, CliError> {
         let account_id: AccountId = key_file.account_id.parse().map_err(|e| {
             CliError::Signing(format!("invalid account_id '{}': {e}", key_file.account_id))
@@ -89,6 +93,20 @@ impl NearSigner {
             .private_key
             .parse()
             .map_err(|e| CliError::Signing(format!("invalid private_key: {e}")))?;
+
+        // Validate public key matches the secret key if provided.
+        if !key_file.public_key.is_empty() {
+            let declared_pk: PublicKey = key_file
+                .public_key
+                .parse()
+                .map_err(|e| CliError::Signing(format!("invalid public_key: {e}")))?;
+            let derived_pk = secret_key.public_key();
+            if declared_pk != derived_pk {
+                return Err(CliError::Signing(format!(
+                    "public key mismatch: file declares {declared_pk} but secret key derives {derived_pk}"
+                )));
+            }
+        }
 
         Ok(Self::new(account_id, secret_key))
     }

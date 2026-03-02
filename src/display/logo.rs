@@ -90,7 +90,7 @@ pub const TEMPLE_GLYPH: &str = "╤║╤";
 pub const FULL_MARK_MIN_WIDTH: u16 = 80;
 
 /// Number of rows in the full Templar mark.
-pub const FULL_MARK_ROWS: usize = 57;
+pub const FULL_MARK_ROWS: usize = 60;
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -159,6 +159,15 @@ mod tests {
     fn full_mark_min_width_is_reasonable() {
         const { assert!(FULL_MARK_MIN_WIDTH >= 60) };
         const { assert!(FULL_MARK_MIN_WIDTH <= 120) };
+    }
+
+    #[test]
+    fn full_mark_rows_matches_actual_line_count() {
+        assert_eq!(
+            TEMPLAR_MARK.lines().count(),
+            FULL_MARK_ROWS,
+            "FULL_MARK_ROWS is out of sync with the actual TEMPLAR_MARK line count"
+        );
     }
 
     #[test]
