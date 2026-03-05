@@ -90,26 +90,28 @@ Templar CLI expects JSON key files at `~/.near-credentials/{network}/{account_id
 
 There are several ways to set this up:
 
-**Option A — Generate with NEAR CLI** (recommended):
+**Option A — Import with near-cli-rs** (recommended):
 
 ```bash
-# Install NEAR CLI if you don't have it
-npm install -g near-cli
+# Install near-cli-rs (pick one)
+cargo install near-cli-rs
+# or: npm install -g near-cli-rs@latest
+# or: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/near-cli-rs/releases/latest/download/near-cli-rs-installer.sh | sh
 
-# Login and store credentials locally
-near login                          # mainnet
-near login --networkId testnet      # testnet
+# Import an existing account via web wallet
+near account import-account using-web-wallet network-config testnet
 ```
 
 This opens a browser to authorize your account and writes the key file to `~/.near-credentials/` automatically.
 
-**Option B — Generate a key pair with NEAR CLI**:
+**Option B — Create a testnet account with near-cli-rs**:
 
 ```bash
-near generate-key your-account.testnet --networkId testnet
+near account create-account sponsor-by-faucet-service your-account.testnet \
+  autogenerate-new-keypair save-to-keychain network-config testnet create
 ```
 
-Then add the generated public key as a full-access key to your account.
+This creates a new testnet account funded by the faucet and stores the key locally.
 
 **Option C — Manual key file**:
 

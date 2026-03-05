@@ -25,21 +25,23 @@ templar config show
 #
 # Write operations (supply, borrow, repay, etc.) require a NEAR signing key.
 # Keys are loaded from ~/.near-credentials/{network}/{account_id}.json — the
-# same format used by the official NEAR CLI.
+# same format used by near-cli-rs.
 #
-# --- Option A: Login with NEAR CLI (recommended) ----------------------------
+# --- Option A: Import with near-cli-rs (recommended) ------------------------
+# Install near-cli-rs, then import an existing account via web wallet.
 # This opens a browser to authorize your account and stores the key file
 # in ~/.near-credentials/ automatically.
 #
-#   npm install -g near-cli          # install NEAR CLI if needed
-#   near login                       # mainnet
-#   near login --networkId testnet   # testnet
+#   cargo install near-cli-rs       # install near-cli-rs
+#   near account import-account using-web-wallet network-config mainnet
+#   near account import-account using-web-wallet network-config testnet
 #
-# --- Option B: Generate a key pair ------------------------------------------
-# Creates a new key pair and writes it to ~/.near-credentials/. You then
-# need to add the public key as a full-access key to your account.
+# --- Option B: Create a testnet account with near-cli-rs --------------------
+# Creates a new testnet account funded by the faucet and stores the key
+# locally.
 #
-#   near generate-key your-account.testnet --networkId testnet
+#   near account create-account sponsor-by-faucet-service your-account.testnet \
+#       autogenerate-new-keypair save-to-keychain network-config testnet create
 #
 # --- Option C: Manual key file -----------------------------------------------
 # Create the key file yourself. Replace the placeholder values with your
@@ -69,7 +71,7 @@ templar config show
 #     echo "Key file found: $KEY_FILE"
 # else
 #     echo "No key file at $KEY_FILE"
-#     echo "Run 'near login --networkId $NETWORK' to create one."
+#     echo "Run 'near account import-account using-web-wallet network-config $NETWORK' to create one."
 #     exit 1
 # fi
 
