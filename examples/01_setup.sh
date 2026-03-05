@@ -3,21 +3,40 @@
 #
 # Creates the Templar config file, sets up NEAR signing credentials,
 # and verifies the backend is reachable.
+#
+# NOTE: The main setup script is ./setup.sh at the repo root, which handles
+# building the binary and the full interactive setup. This file documents
+# each step individually for reference.
 set -euo pipefail
+
+# --- Resolve the templar binary ----------------------------------------------
+# Use the binary from PATH if available, otherwise fall back to the release
+# build in the repo.
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+if command -v templar &>/dev/null; then
+    TEMPLAR="templar"
+elif [ -x "$REPO_DIR/target/release/templar" ]; then
+    TEMPLAR="$REPO_DIR/target/release/templar"
+else
+    echo "templar binary not found."
+    echo "Build it first:  cargo build --release"
+    echo "Or run the setup: ./setup.sh"
+    exit 1
+fi
 
 # --- Initialize configuration ------------------------------------------------
 # Creates ~/.templar/config.toml with default mainnet and testnet profiles.
 # Safe to run multiple times — it will not overwrite an existing config.
-templar config init
+"$TEMPLAR" config init
 
 # --- View the active configuration -------------------------------------------
 # Shows which profile is active and all resolved settings.
-templar config show
+"$TEMPLAR" config show
 
 # --- Override a setting -------------------------------------------------------
 # Point the RPC URL at a different endpoint (useful for local nodes or
 # alternative RPC providers).
-# templar config set near_rpc_url https://rpc.mainnet.near.org
+# "$TEMPLAR" config set near_rpc_url https://rpc.mainnet.near.org
 
 # =============================================================================
 # NEAR Signing Keys
@@ -77,19 +96,19 @@ templar config show
 
 # --- Check backend health ----------------------------------------------------
 # Verifies the Templar backend API is reachable and returns status.
-templar health
+"$TEMPLAR" health
 #> Backend: healthy (https://api.templarfi.org)
 
 # --- Switch profiles ----------------------------------------------------------
 # Use --profile to target a different network:
-templar health --profile testnet
+"$TEMPLAR" health --profile testnet
 
 # --- Test a read-only command -------------------------------------------------
 # Read-only commands work without signing keys:
-templar markets list
+"$TEMPLAR" markets list
 #> Lists all available lending markets
 
 # --- Test a write command (requires signing key) ------------------------------
 # Uncomment to test a write operation on testnet:
-# templar supply deposit ibtc-usdc.v1.tmplr.testnet 1000 \
+# "$TEMPLAR" supply deposit ibtc-usdc.v1.tmplr.testnet 1000 \
 #     --signer your-account.testnet --profile testnet

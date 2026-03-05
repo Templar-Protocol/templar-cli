@@ -24,124 +24,47 @@ Your keys. Your protocol. Your bank.
 ## Requirements
 
 - Rust 1.75+ (install via [rustup](https://rustup.rs/))
-- A NEAR account with signing keys (see [Account Setup](#account-setup))
+- A NEAR account with signing keys for write operations
 
-## Installation
+## Getting Started
+
+The setup script handles everything — building the binary, initializing config, installing [near-cli-rs](https://github.com/near/near-cli-rs), and importing your NEAR account credentials:
 
 ```bash
 git clone https://github.com/Templar-Protocol/templar-cli.git
 cd templar-cli
-cargo build --release
-
-# Option A: add to PATH for this session
-export PATH="$PWD/target/release:$PATH"
-
-# Option B: install permanently
-cargo install --path .
+./setup.sh
 ```
 
-Verify it works:
+The script is interactive and will walk you through each step. Once it finishes:
 
 ```bash
-templar --version
-```
-
-## Quick Start
-
-```bash
-# 1. Initialize configuration (creates ~/.templar/config.toml)
-templar config init
-
-# 2. Check backend connectivity
-templar health
-
-# 3. List available lending markets
 templar markets list
-
-# 4. Check oracle prices
 templar prices btc eth sol
-
-# 5. View an account's positions
 templar account positions your-account.near
 ```
 
-## Account Setup
+### Manual Setup
 
-Templar CLI uses NEAR signing keys for write operations (supply, borrow, repay, etc.). Keys are loaded from the standard `~/.near-credentials/` directory — the same format used by the official NEAR CLI.
-
-### Creating a NEAR Account
-
-If you don't have a NEAR account yet:
-
-1. **Testnet** (for development): visit [wallet.testnet.near.org](https://testnet.near.org) to create a free testnet account
-2. **Mainnet**: create an account at [wallet.near.org](https://wallet.near.org) or through any NEAR wallet provider
-
-### Adding Signing Keys
-
-Templar CLI expects JSON key files at `~/.near-credentials/{network}/{account_id}.json` with this format:
-
-```json
-{
-  "account_id": "your-account.testnet",
-  "public_key": "ed25519:...",
-  "private_key": "ed25519:..."
-}
-```
-
-There are several ways to set this up:
-
-**Option A — Import with near-cli-rs** (recommended):
+If you prefer to set things up yourself:
 
 ```bash
-# Install near-cli-rs (pick one)
+# Build
+cargo build --release
+export PATH="$PWD/target/release:$PATH"
+
+# Initialize config
+templar config init
+
+# Install near-cli-rs and import your NEAR account
 cargo install near-cli-rs
-# or: npm install -g near-cli-rs@latest
-# or: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/near/near-cli-rs/releases/latest/download/near-cli-rs-installer.sh | sh
-
-# Import an existing account via web wallet
 near account import-account using-web-wallet network-config testnet
+
+# Verify
+templar health
 ```
 
-This opens a browser to authorize your account and writes the key file to `~/.near-credentials/` automatically.
-
-**Option B — Create a testnet account with near-cli-rs**:
-
-```bash
-near account create-account sponsor-by-faucet-service your-account.testnet \
-  autogenerate-new-keypair save-to-keychain network-config testnet create
-```
-
-This creates a new testnet account funded by the faucet and stores the key locally.
-
-**Option C — Manual key file**:
-
-```bash
-mkdir -p ~/.near-credentials/testnet
-
-cat > ~/.near-credentials/testnet/your-account.testnet.json << 'EOF'
-{
-  "account_id": "your-account.testnet",
-  "public_key": "ed25519:YOUR_PUBLIC_KEY",
-  "private_key": "ed25519:YOUR_PRIVATE_KEY"
-}
-EOF
-
-chmod 600 ~/.near-credentials/testnet/your-account.testnet.json
-```
-
-### Verifying Your Setup
-
-```bash
-# Check that your key file exists and is readable
-ls ~/.near-credentials/testnet/your-account.testnet.json
-
-# Read-only commands work without keys:
-templar markets list
-
-# Write commands require --signer:
-templar supply deposit ibtc-usdc.v1.tmplr.near 1000 \
-  --signer your-account.testnet --profile testnet
-```
+Write operations (supply, borrow, repay, etc.) require a NEAR signing key. The `near account import-account` command above stores your key at `~/.near-credentials/{network}/{account_id}.json` — the standard format used by near-cli-rs. See [`examples/01_setup.sh`](examples/01_setup.sh) for more credential setup options.
 
 ## Configuration
 
